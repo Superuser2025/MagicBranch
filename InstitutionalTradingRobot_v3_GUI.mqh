@@ -1383,7 +1383,7 @@ void DrawPriceActionCommentary()
 
     int x = 750;   // Right side, below Real-Time Analysis
     int y = 465;   // Below Real-Time Analysis panel
-    int width = 1300;  // Extra wide panel to ensure full educational commentary displays without any truncation
+    int width = 2500;  // Extra wide panel to ensure full educational commentary displays without any truncation
     int line_height = 20;
     int max_lines = 50;  // Show up to 50 messages
 
@@ -1553,9 +1553,9 @@ void DrawPriceActionCommentary()
             display_text = display_text + "  ◄◄◄ LATEST";  // Arrow points to newest comment
         }
 
-        // Wrap text into multiple lines if needed (240 chars per line for 1300px panel)
+        // Wrap text into multiple lines if needed (500 chars per line for 2500px panel)
         string wrapped_lines[];
-        WrapText(display_text, wrapped_lines, 240);
+        WrapText(display_text, wrapped_lines, 500);
 
         // Display each wrapped line
         for(int line_idx = 0; line_idx < ArraySize(wrapped_lines); line_idx++)
