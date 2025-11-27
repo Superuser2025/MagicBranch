@@ -6,6 +6,7 @@ Centralized configuration for the entire application
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Dict, List
+from enum import Enum
 import json
 
 # Base paths
@@ -30,6 +31,50 @@ SETTINGS_FILE = DATA_DIR / "settings.json"
 TRADE_JOURNAL_FILE = DATA_DIR / "trade_journal.json"
 
 
+# ============================================================
+# UPDATE SPEED PRESETS
+# ============================================================
+class UpdateSpeed(Enum):
+    """
+    Configurable update speed presets
+    User can choose based on their trading style and system performance
+    """
+    REALTIME = "realtime"       # Ultra-fast updates (100ms) - For scalpers, high-end systems
+    FAST = "fast"               # Fast updates (1 second) - For active day traders
+    NORMAL = "normal"           # Normal updates (10 seconds) - For swing/position traders
+    SLOW = "slow"               # Slow updates (30 seconds) - For conservative systems
+    CUSTOM = "custom"           # Custom intervals set by user
+
+
+# Update speed configurations (in milliseconds)
+UPDATE_SPEED_CONFIGS = {
+    UpdateSpeed.REALTIME: {
+        'market_data': 100,      # 100ms - Real-time tick data
+        'chart_refresh': 100,    # 100ms - Ultra smooth chart
+        'ui_refresh': 50,        # 50ms - Instant UI response
+        'description': 'Real-time (100ms) - For scalpers on high-performance systems'
+    },
+    UpdateSpeed.FAST: {
+        'market_data': 1000,     # 1 second
+        'chart_refresh': 500,    # 500ms
+        'ui_refresh': 100,       # 100ms
+        'description': 'Fast (1s) - For day traders and active trading'
+    },
+    UpdateSpeed.NORMAL: {
+        'market_data': 10000,    # 10 seconds (original request)
+        'chart_refresh': 1000,   # 1 second
+        'ui_refresh': 250,       # 250ms
+        'description': 'Normal (10s) - For swing/position traders (Recommended)'
+    },
+    UpdateSpeed.SLOW: {
+        'market_data': 30000,    # 30 seconds
+        'chart_refresh': 5000,   # 5 seconds
+        'ui_refresh': 500,       # 500ms
+        'description': 'Slow (30s) - For conservative systems or low bandwidth'
+    },
+}
+
+
 @dataclass
 class AppConfig:
     """Main application configuration"""
@@ -45,8 +90,11 @@ class AppConfig:
     window_min_width: int = 1280
     window_min_height: int = 720
 
-    # Update frequencies (milliseconds)
-    market_data_update_interval: int = 10000  # 10 seconds (as requested)
+    # Update speed preset (user can change in GUI)
+    update_speed_preset: UpdateSpeed = UpdateSpeed.NORMAL
+
+    # Update frequencies (milliseconds) - Set by update_speed_preset
+    market_data_update_interval: int = 10000  # 10 seconds (NORMAL preset)
     chart_refresh_interval: int = 1000        # 1 second
     ui_refresh_interval: int = 250            # 250ms for smooth UI
 
@@ -54,6 +102,33 @@ class AppConfig:
     mt5_timeout: int = 30                     # Connection timeout (seconds)
     max_reconnect_attempts: int = 5
     reconnect_delay: int = 5                  # Seconds between reconnect attempts
+
+    def set_update_speed(self, speed: UpdateSpeed):
+        """
+        Apply update speed preset
+
+        Args:
+            speed: UpdateSpeed enum value
+        """
+        if speed == UpdateSpeed.CUSTOM:
+            # Don't change intervals for custom
+            return
+
+        config = UPDATE_SPEED_CONFIGS.get(speed)
+        if config:
+            self.update_speed_preset = speed
+            self.market_data_update_interval = config['market_data']
+            self.chart_refresh_interval = config['chart_refresh']
+            self.ui_refresh_interval = config['ui_refresh']
+            print(f"✓ Update speed changed to: {config['description']}")
+
+    def get_update_speed_description(self) -> str:
+        """Get description of current update speed"""
+        if self.update_speed_preset == UpdateSpeed.CUSTOM:
+            return f"Custom ({self.market_data_update_interval}ms)"
+
+        config = UPDATE_SPEED_CONFIGS.get(self.update_speed_preset)
+        return config['description'] if config else "Unknown"
 
     # Chart settings
     default_symbol: str = "EURUSD"

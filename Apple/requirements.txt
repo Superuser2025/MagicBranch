@@ -2,6 +2,7 @@
 
 # GUI Framework
 PyQt6>=6.6.0
+PyQt6-WebEngine>=6.6.0
 
 # MT5 Integration
 MetaTrader5>=5.0.45
