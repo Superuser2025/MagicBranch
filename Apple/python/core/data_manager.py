@@ -1,0 +1,319 @@
+"""
+AppleTrader Pro - Data Manager
+Manages real-time market data buffering and synchronization
+"""
+
+from datetime import datetime
+from typing import Optional, Dict, List
+from collections import deque
+import pandas as pd
+
+from utils.logger import logger
+
+
+class MarketDataBuffer:
+    """
+    Circular buffer for candlestick data
+    Efficiently stores and updates real-time candles
+    """
+
+    def __init__(self, max_size: int = 1000):
+        self.max_size = max_size
+        self.candles = deque(maxlen=max_size)
+        self.symbol = ""
+        self.timeframe = ""
+        self.last_update = None
+
+    def update(self, candles_df: pd.DataFrame, symbol: str, timeframe: str):
+        """Update buffer with new candle data"""
+        self.symbol = symbol
+        self.timeframe = timeframe
+        self.last_update = datetime.now()
+
+        # Convert DataFrame rows to list of dicts
+        new_candles = candles_df.to_dict('records')
+
+        # Replace all candles (for now - can optimize later with incremental updates)
+        self.candles.clear()
+        self.candles.extend(new_candles)
+
+        logger.debug(f"Buffer updated: {len(self.candles)} candles for {symbol} {timeframe}")
+
+    def get_latest(self, count: int = 200) -> List[Dict]:
+        """Get latest N candles"""
+        return list(self.candles)[-count:] if self.candles else []
+
+    def get_latest_df(self, count: int = 200) -> Optional[pd.DataFrame]:
+        """Get latest N candles as DataFrame"""
+        latest = self.get_latest(count)
+        if not latest:
+            return None
+        return pd.DataFrame(latest)
+
+    def get_last_candle(self) -> Optional[Dict]:
+        """Get the most recent candle"""
+        return self.candles[-1] if self.candles else None
+
+
+class PatternBuffer:
+    """
+    Buffer for detected patterns
+    Stores pattern information with timestamps
+    """
+
+    def __init__(self, max_size: int = 100):
+        self.max_size = max_size
+        self.patterns = deque(maxlen=max_size)
+
+    def add_pattern(self, pattern: Dict):
+        """Add a new pattern"""
+        pattern['detected_at'] = datetime.now()
+        self.patterns.append(pattern)
+
+    def get_active_patterns(self) -> List[Dict]:
+        """Get all active (non-expired) patterns"""
+        # For now, return all patterns
+        # Can add expiry logic later
+        return list(self.patterns)
+
+    def clear(self):
+        """Clear all patterns"""
+        self.patterns.clear()
+
+
+class ZoneBuffer:
+    """
+    Buffer for trading zones (FVGs, Order Blocks, Liquidity)
+    """
+
+    def __init__(self, max_size: int = 100):
+        self.max_size = max_size
+        self.fvgs = deque(maxlen=max_size)
+        self.order_blocks = deque(maxlen=max_size)
+        self.liquidity_zones = deque(maxlen=max_size)
+
+    def update_fvgs(self, fvgs: List[Dict]):
+        """Update FVG zones"""
+        self.fvgs.clear()
+        self.fvgs.extend(fvgs)
+
+    def update_order_blocks(self, order_blocks: List[Dict]):
+        """Update Order Block zones"""
+        self.order_blocks.clear()
+        self.order_blocks.extend(order_blocks)
+
+    def update_liquidity(self, liquidity: List[Dict]):
+        """Update Liquidity zones"""
+        self.liquidity_zones.clear()
+        self.liquidity_zones.extend(liquidity)
+
+    def get_all_zones(self) -> Dict:
+        """Get all zones"""
+        return {
+            'fvgs': list(self.fvgs),
+            'order_blocks': list(self.order_blocks),
+            'liquidity': list(self.liquidity_zones),
+        }
+
+
+class DataManager:
+    """
+    Central data management system
+    Coordinates all market data buffers and state
+    """
+
+    def __init__(self):
+        # Buffers
+        self.candle_buffer = MarketDataBuffer(max_size=1000)
+        self.pattern_buffer = PatternBuffer(max_size=100)
+        self.zone_buffer = ZoneBuffer(max_size=100)
+
+        # Current market state
+        self.current_price = {
+            'bid': 0.0,
+            'ask': 0.0,
+            'last': 0.0,
+            'spread': 0.0,
+        }
+
+        # Market analysis state
+        self.market_state = {
+            'regime': 'UNKNOWN',           # TRENDING, RANGING, CHOPPY
+            'bias': 'NEUTRAL',             # BULLISH, BEARISH, NEUTRAL
+            'session': 'UNKNOWN',          # LONDON, NY, ASIAN
+            'volatility': 'NORMAL',        # LOW, NORMAL, HIGH
+        }
+
+        # Filter status
+        self.filter_status = {
+            'volume_ok': False,
+            'spread_ok': False,
+            'session_ok': False,
+            'news_ok': False,
+            'mtf_ok': False,
+            'correlation_ok': False,
+        }
+
+        # Trade decision
+        self.trade_decision = {
+            'decision': 'WAIT',            # ENTER, SKIP, WAIT
+            'confluence': 0,
+            'required': 3,
+            'primary_reason': '',
+            'explanation': '',
+        }
+
+        # Active pattern
+        self.active_pattern = None
+
+        # Indicators
+        self.indicators = {
+            'ema_200': 0.0,
+            'atr_14': 0.0,
+            'rsi_14': 0.0,
+        }
+
+        # Positions
+        self.positions = []
+
+        # Account info
+        self.account = {
+            'balance': 0.0,
+            'equity': 0.0,
+            'profit': 0.0,
+            'daily_pnl': 0.0,
+            'margin': 0.0,
+            'margin_free': 0.0,
+            'margin_level': 0.0,
+            'currency': 'USD',
+        }
+
+        # ML data
+        self.ml_data = {
+            'enabled': False,
+            'probability': 0.0,
+            'confidence': 0.0,
+            'signal': 'WAIT',
+            'sample_count': 0,
+        }
+
+        # Last update timestamp
+        self.last_update = None
+
+    def update_from_mt5_data(self, data: Dict):
+        """
+        Update all buffers from MT5 data (either from API or IPC file)
+
+        Args:
+            data: Market data dictionary from MT5
+        """
+        try:
+            timestamp = data.get('timestamp')
+            if timestamp:
+                self.last_update = datetime.fromisoformat(timestamp) if isinstance(timestamp, str) else timestamp
+
+            # Update price
+            if 'price' in data:
+                self.current_price.update(data['price'])
+
+            # Update market state
+            if 'market_state' in data:
+                self.market_state.update(data['market_state'])
+
+            # Update filter status
+            if 'filters' in data:
+                self.filter_status.update(data['filters'])
+
+            # Update trade decision
+            if 'decision' in data:
+                self.trade_decision.update(data['decision'])
+
+            # Update active pattern
+            if 'patterns' in data and 'active' in data['patterns']:
+                self.active_pattern = data['patterns']['active']
+                if self.active_pattern:
+                    self.pattern_buffer.add_pattern(self.active_pattern)
+
+            # Update zones
+            if 'zones' in data:
+                zones = data['zones']
+                if 'fvgs' in zones:
+                    self.zone_buffer.update_fvgs(zones['fvgs'])
+                if 'order_blocks' in zones:
+                    self.zone_buffer.update_order_blocks(zones['order_blocks'])
+                if 'liquidity' in zones:
+                    self.zone_buffer.update_liquidity(zones['liquidity'])
+
+            # Update indicators
+            if 'indicators' in data:
+                self.indicators.update(data['indicators'])
+
+            # Update positions
+            if 'positions' in data:
+                self.positions = data['positions']
+
+            # Update account
+            if 'account' in data:
+                self.account.update(data['account'])
+
+            # Update ML data
+            if 'ml' in data:
+                self.ml_data.update(data['ml'])
+
+            logger.debug(f"Data manager updated at {self.last_update}")
+
+        except Exception as e:
+            logger.exception(f"Error updating data manager: {e}")
+
+    def update_candles(self, candles_df: pd.DataFrame, symbol: str, timeframe: str):
+        """Update candle buffer"""
+        self.candle_buffer.update(candles_df, symbol, timeframe)
+
+    def get_candles(self, count: int = 200) -> List[Dict]:
+        """Get latest candles"""
+        return self.candle_buffer.get_latest(count)
+
+    def get_candles_df(self, count: int = 200) -> Optional[pd.DataFrame]:
+        """Get latest candles as DataFrame"""
+        return self.candle_buffer.get_latest_df(count)
+
+    def get_latest_price(self) -> Dict:
+        """Get latest price data"""
+        return self.current_price.copy()
+
+    def get_market_state(self) -> Dict:
+        """Get current market state"""
+        return {
+            **self.market_state,
+            **self.filter_status,
+            'decision': self.trade_decision,
+            'pattern': self.active_pattern,
+        }
+
+    def get_zones(self) -> Dict:
+        """Get all trading zones"""
+        return self.zone_buffer.get_all_zones()
+
+    def get_positions(self) -> List[Dict]:
+        """Get open positions"""
+        return self.positions.copy()
+
+    def get_account_summary(self) -> Dict:
+        """Get account summary"""
+        return self.account.copy()
+
+    def get_ml_status(self) -> Dict:
+        """Get ML status and predictions"""
+        return self.ml_data.copy()
+
+    def is_data_fresh(self, max_age_seconds: int = 30) -> bool:
+        """Check if data is recent"""
+        if self.last_update is None:
+            return False
+
+        age = (datetime.now() - self.last_update).total_seconds()
+        return age <= max_age_seconds
+
+
+# Global data manager instance
+data_manager = DataManager()
