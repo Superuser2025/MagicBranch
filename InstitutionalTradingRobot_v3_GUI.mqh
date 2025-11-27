@@ -1562,11 +1562,11 @@ void DrawPriceActionCommentary()
         {
             string label_name = prefix + "PAC_" + IntegerToString(display_line);
 
-            if(ObjectFind(0, label_name) < 0)
-            {
-                ObjectCreate(0, label_name, OBJ_LABEL, 0, 0, 0);
-            }
+            // Delete first to ensure clean recreation
+            ObjectDelete(0, label_name);
 
+            // Create fresh OBJ_LABEL
+            ObjectCreate(0, label_name, OBJ_LABEL, 0, 0, 0);
             ObjectSetInteger(0, label_name, OBJPROP_CORNER, CORNER_LEFT_UPPER);
             ObjectSetInteger(0, label_name, OBJPROP_ANCHOR, ANCHOR_LEFT_UPPER);
 
