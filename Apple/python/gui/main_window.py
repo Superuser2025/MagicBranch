@@ -15,13 +15,14 @@ from utils.logger import logger
 from core.mt5_connector import connector
 from core.data_manager import data_manager
 
-# Import panels (we'll create these next)
-# from gui.chart_panel import ChartPanel
-# from gui.dashboard_panel import DashboardPanel
-# from gui.controls_panel import ControlsPanel
-# from gui.commentary_panel import CommentaryPanel
-# from gui.ml_panel import MLPanel
-# from gui.orders_panel import OrdersPanel
+# Import panels
+from gui.chart_panel import ChartPanel
+from gui.dashboard_panel import DashboardPanel
+from gui.controls_panel import ControlsPanel
+from gui.commentary_panel import CommentaryPanel
+from gui.ml_panel import MLPanel
+from gui.orders_panel import OrdersPanel
+from widgets.market_drivers import MarketDriversWidget
 
 
 class MainWindow(QMainWindow):
@@ -80,24 +81,13 @@ class MainWindow(QMainWindow):
         left_panel = QWidget()
         left_panel.setFixedWidth(320)
         left_layout = QVBoxLayout(left_panel)
-        left_layout.setContentsMargins(10, 10, 10, 10)
+        left_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Placeholder for controls panel
-        controls_label = QLabel("⚙️ CONTROLS PANEL")
-        controls_label.setStyleSheet("""
-            QLabel {
-                font-size: 18px;
-                font-weight: bold;
-                padding: 20px;
-                background-color: #141B2D;
-                border-radius: 6px;
-            }
-        """)
-        left_layout.addWidget(controls_label)
-
-        # Add controls panel here (when created)
-        # self.controls_panel = ControlsPanel()
-        # left_layout.addWidget(self.controls_panel)
+        # Add controls panel
+        self.controls_panel = ControlsPanel()
+        self.controls_panel.setting_changed.connect(self.on_setting_changed)
+        self.controls_panel.order_requested.connect(self.on_order_requested)
+        left_layout.addWidget(self.controls_panel)
 
         main_splitter.addWidget(left_panel)
 
@@ -114,67 +104,38 @@ class MainWindow(QMainWindow):
         # Top: Chart
         chart_container = QWidget()
         chart_layout = QVBoxLayout(chart_container)
-        chart_label = QLabel("📈 CHART PANEL")
-        chart_label.setStyleSheet("""
-            QLabel {
-                font-size: 18px;
-                font-weight: bold;
-                padding: 20px;
-                background-color: #141B2D;
-                border-radius: 6px;
-            }
-        """)
-        chart_layout.addWidget(chart_label)
+        chart_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Add chart panel here (when created)
-        # self.chart_panel = ChartPanel()
-        # chart_layout.addWidget(self.chart_panel)
+        # Add chart panel
+        self.chart_panel = ChartPanel()
+        self.chart_panel.timeframe_changed.connect(self.on_timeframe_changed)
+        chart_layout.addWidget(self.chart_panel)
 
         center_splitter.addWidget(chart_container)
 
         # Bottom: Commentary + ML
         bottom_panel = QWidget()
         bottom_layout = QHBoxLayout(bottom_panel)
+        bottom_layout.setContentsMargins(0, 0, 0, 0)
+        bottom_layout.setSpacing(10)
 
         # Commentary panel
         commentary_container = QWidget()
         commentary_layout = QVBoxLayout(commentary_container)
-        commentary_label = QLabel("💬 COMMENTARY")
-        commentary_label.setStyleSheet("""
-            QLabel {
-                font-size: 16px;
-                font-weight: bold;
-                padding: 10px;
-                background-color: #141B2D;
-                border-radius: 6px;
-            }
-        """)
-        commentary_layout.addWidget(commentary_label)
+        commentary_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Add commentary panel here (when created)
-        # self.commentary_panel = CommentaryPanel()
-        # commentary_layout.addWidget(self.commentary_panel)
+        self.commentary_panel = CommentaryPanel()
+        commentary_layout.addWidget(self.commentary_panel)
 
         bottom_layout.addWidget(commentary_container)
 
         # ML panel
         ml_container = QWidget()
         ml_layout = QVBoxLayout(ml_container)
-        ml_label = QLabel("🤖 ML INSIGHTS")
-        ml_label.setStyleSheet("""
-            QLabel {
-                font-size: 16px;
-                font-weight: bold;
-                padding: 10px;
-                background-color: #141B2D;
-                border-radius: 6px;
-            }
-        """)
-        ml_layout.addWidget(ml_label)
+        ml_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Add ML panel here (when created)
-        # self.ml_panel = MLPanel()
-        # ml_layout.addWidget(self.ml_panel)
+        self.ml_panel = MLPanel()
+        ml_layout.addWidget(self.ml_panel)
 
         bottom_layout.addWidget(ml_container)
 
@@ -197,45 +158,31 @@ class MainWindow(QMainWindow):
         # Right splitter (vertical)
         right_splitter = QSplitter(Qt.Orientation.Vertical)
 
-        # Top: Market Status
+        # Top: Market Status + Market Drivers (combined in scrollable area)
         dashboard_container = QWidget()
         dashboard_layout = QVBoxLayout(dashboard_container)
-        dashboard_label = QLabel("📊 MARKET STATUS")
-        dashboard_label.setStyleSheet("""
-            QLabel {
-                font-size: 16px;
-                font-weight: bold;
-                padding: 10px;
-                background-color: #141B2D;
-                border-radius: 6px;
-            }
-        """)
-        dashboard_layout.addWidget(dashboard_label)
+        dashboard_layout.setContentsMargins(0, 0, 0, 0)
+        dashboard_layout.setSpacing(10)
 
-        # Add dashboard panel here (when created)
-        # self.dashboard_panel = DashboardPanel()
-        # dashboard_layout.addWidget(self.dashboard_panel)
+        # Dashboard panel
+        self.dashboard_panel = DashboardPanel()
+        dashboard_layout.addWidget(self.dashboard_panel)
+
+        # Market Drivers widget
+        self.market_drivers = MarketDriversWidget()
+        dashboard_layout.addWidget(self.market_drivers)
 
         right_splitter.addWidget(dashboard_container)
 
         # Bottom: Orders
         orders_container = QWidget()
         orders_layout = QVBoxLayout(orders_container)
-        orders_label = QLabel("📋 ORDERS")
-        orders_label.setStyleSheet("""
-            QLabel {
-                font-size: 16px;
-                font-weight: bold;
-                padding: 10px;
-                background-color: #141B2D;
-                border-radius: 6px;
-            }
-        """)
-        orders_layout.addWidget(orders_label)
+        orders_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Add orders panel here (when created)
-        # self.orders_panel = OrdersPanel()
-        # orders_layout.addWidget(self.orders_panel)
+        # Orders panel
+        self.orders_panel = OrdersPanel()
+        self.orders_panel.close_position_requested.connect(self.on_close_position)
+        orders_layout.addWidget(self.orders_panel)
 
         right_splitter.addWidget(orders_container)
 
@@ -496,6 +443,64 @@ class MainWindow(QMainWindow):
             <p>Clean charts. Clear decisions. Confident trading.</p>
             """
         )
+
+    def on_setting_changed(self, setting_name: str, value):
+        """Handle setting change from controls panel"""
+        logger.info(f"Setting changed: {setting_name} = {value}")
+
+        # Update timers if update speed changed
+        if setting_name == 'update_speed':
+            self.market_data_timer.setInterval(settings.app.market_data_update_interval)
+            self.ui_timer.setInterval(settings.app.ui_refresh_interval)
+            self.statusBar.showMessage(f"Update speed: {settings.app.get_update_speed_description()}", 3000)
+
+        # Add commentary for critical settings
+        if setting_name == 'enable_trading':
+            if value:
+                self.commentary_panel.add_comment("⚠️ AUTO TRADING ENABLED - EA will execute trades!", 1)
+            else:
+                self.commentary_panel.add_comment("✓ INDICATOR MODE - No trading", 3)
+
+    def on_order_requested(self, order_type: str):
+        """Handle order request from controls panel"""
+        from PyQt6.QtWidgets import QMessageBox
+
+        # Confirmation dialog
+        if settings.trading.require_confirmation:
+            reply = QMessageBox.question(
+                self,
+                'Confirm Order',
+                f'Place {order_type} order with {settings.trading.default_risk_percent}% risk?',
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+
+            if reply == QMessageBox.StandardButton.No:
+                self.commentary_panel.add_comment(f"Order cancelled by user: {order_type}", 3)
+                return
+
+        # Place order via MT5 connector
+        logger.info(f"Order requested: {order_type}")
+        self.commentary_panel.add_comment(f"📈 Placing {order_type} order...", 2)
+
+        # TODO: Calculate lot size, SL, TP
+        # TODO: Call connector.place_order()
+
+        self.statusBar.showMessage(f"{order_type} order requested", 3000)
+
+    def on_close_position(self, ticket: int):
+        """Handle close position request"""
+        logger.info(f"Close position requested: {ticket}")
+        self.commentary_panel.add_comment(f"Closing position #{ticket}...", 2)
+
+        # TODO: Call connector.close_position(ticket)
+
+        self.statusBar.showMessage(f"Position {ticket} close requested", 3000)
+
+    def on_timeframe_changed(self, timeframe: str):
+        """Handle timeframe change from chart panel"""
+        logger.info(f"Timeframe changed to: {timeframe}")
+        self.statusBar.showMessage(f"Timeframe: {timeframe}", 2000)
 
     def closeEvent(self, event):
         """Handle window close event"""
