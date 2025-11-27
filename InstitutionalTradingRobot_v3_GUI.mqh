@@ -1383,9 +1383,9 @@ void DrawPriceActionCommentary()
 
     int x = 750;   // Right side, below Real-Time Analysis
     int y = 465;   // Below Real-Time Analysis panel
-    int width = 2500;  // Extra wide panel to ensure full educational commentary displays without any truncation
+    int width = 5000;  // Massive panel to accommodate 2000+ character texts without any truncation
     int line_height = 20;
-    int max_lines = 50;  // Show up to 50 messages
+    int max_lines = 100;  // Show up to 100 messages with wrapped lines
 
     // Background box - SCROLLABLE COMMENTARY
     if(ObjectFind(0, box_name) < 0)
@@ -1394,7 +1394,7 @@ void DrawPriceActionCommentary()
         ObjectSetInteger(0, box_name, OBJPROP_XDISTANCE, x);
         ObjectSetInteger(0, box_name, OBJPROP_YDISTANCE, y);
         ObjectSetInteger(0, box_name, OBJPROP_XSIZE, width);
-        ObjectSetInteger(0, box_name, OBJPROP_YSIZE, 500);  // Tall panel
+        ObjectSetInteger(0, box_name, OBJPROP_YSIZE, 800);  // Extra tall panel for massive texts
         ObjectSetInteger(0, box_name, OBJPROP_BGCOLOR, C'10,15,25');  // Dark blue background
         ObjectSetInteger(0, box_name, OBJPROP_BORDER_TYPE, BORDER_FLAT);
         ObjectSetInteger(0, box_name, OBJPROP_CORNER, CORNER_LEFT_UPPER);
@@ -1456,8 +1456,8 @@ void DrawPriceActionCommentary()
     ObjectSetString(0, local_time_label, OBJPROP_TEXT, local_time_text);
     ObjectSetInteger(0, local_time_label, OBJPROP_COLOR, clrLightGreen);
 
-    // Clear old commentary labels (increased to 150 to handle wrapped lines)
-    for(int i = 0; i < 150; i++)
+    // Clear old commentary labels (increased to 500 to handle massive wrapped texts)
+    for(int i = 0; i < 500; i++)
     {
         string label_name = prefix + "PAC_" + IntegerToString(i);
         ObjectDelete(0, label_name);
@@ -1554,9 +1554,9 @@ void DrawPriceActionCommentary()
             display_text = display_text + "  ◄◄◄ LATEST";  // Arrow points to newest comment
         }
 
-        // Wrap text into multiple lines (240 chars per line for large screens)
+        // Wrap text into multiple lines (400 chars per line for massive texts)
         string wrapped_lines[];
-        WrapText(display_text, wrapped_lines, 240);
+        WrapText(display_text, wrapped_lines, 400);
 
         // Display each wrapped line using OBJ_LABEL
         for(int line_idx = 0; line_idx < ArraySize(wrapped_lines); line_idx++)
