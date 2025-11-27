@@ -1564,11 +1564,15 @@ void DrawPriceActionCommentary()
 
             // Indent continuation lines slightly
             int indent = (line_idx > 0) ? 15 : 0;
+            int text_box_width = width - 20 - indent;  // Calculate width once
 
-            // Create OBJ_EDIT with proper width
+            // Create OBJ_EDIT with width set immediately
             if(ObjectFind(0, label_name) < 0)
             {
                 ObjectCreate(0, label_name, OBJ_EDIT, 0, 0, 0);
+                // CRITICAL: Set width immediately after creation
+                ObjectSetInteger(0, label_name, OBJPROP_XSIZE, text_box_width);
+                ObjectSetInteger(0, label_name, OBJPROP_YSIZE, line_height);
             }
 
             ObjectSetInteger(0, label_name, OBJPROP_CORNER, CORNER_LEFT_UPPER);
@@ -1576,8 +1580,8 @@ void DrawPriceActionCommentary()
             ObjectSetInteger(0, label_name, OBJPROP_XDISTANCE, x + 10 + indent);
             ObjectSetInteger(0, label_name, OBJPROP_YDISTANCE, y + 75 + display_line * line_height);
 
-            // CRITICAL: Set width BEFORE setting text for OBJ_EDIT
-            ObjectSetInteger(0, label_name, OBJPROP_XSIZE, width - 20 - indent);  // Full panel width minus padding
+            // Set width again to ensure it's applied (critical for OBJ_EDIT)
+            ObjectSetInteger(0, label_name, OBJPROP_XSIZE, text_box_width);
             ObjectSetInteger(0, label_name, OBJPROP_YSIZE, line_height);
 
             // Use bold font for headings OR for the latest comment (only on first line)
