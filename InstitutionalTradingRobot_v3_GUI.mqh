@@ -1562,9 +1562,23 @@ void DrawPriceActionCommentary()
         {
             string label_name = prefix + "PAC_" + IntegerToString(display_line);
 
-            ObjectCreate(0, label_name, OBJ_EDIT, 0, 0, 0);
+            // Indent continuation lines slightly
+            int indent = (line_idx > 0) ? 15 : 0;
+
+            // Create OBJ_EDIT with proper width
+            if(ObjectFind(0, label_name) < 0)
+            {
+                ObjectCreate(0, label_name, OBJ_EDIT, 0, 0, 0);
+            }
+
             ObjectSetInteger(0, label_name, OBJPROP_CORNER, CORNER_LEFT_UPPER);
             ObjectSetInteger(0, label_name, OBJPROP_ANCHOR, ANCHOR_LEFT_UPPER);
+            ObjectSetInteger(0, label_name, OBJPROP_XDISTANCE, x + 10 + indent);
+            ObjectSetInteger(0, label_name, OBJPROP_YDISTANCE, y + 75 + display_line * line_height);
+
+            // CRITICAL: Set width BEFORE setting text for OBJ_EDIT
+            ObjectSetInteger(0, label_name, OBJPROP_XSIZE, width - 20 - indent);  // Full panel width minus padding
+            ObjectSetInteger(0, label_name, OBJPROP_YSIZE, line_height);
 
             // Use bold font for headings OR for the latest comment (only on first line)
             if((is_heading || is_latest) && line_idx == 0)
@@ -1574,18 +1588,11 @@ void DrawPriceActionCommentary()
 
             ObjectSetInteger(0, label_name, OBJPROP_FONTSIZE, is_heading ? 10 : 9);
 
-            // Indent continuation lines slightly
-            int indent = (line_idx > 0) ? 15 : 0;
-            ObjectSetInteger(0, label_name, OBJPROP_XDISTANCE, x + 10 + indent);
-            ObjectSetInteger(0, label_name, OBJPROP_YDISTANCE, y + 75 + display_line * line_height);  // Start after time headers
-
-            // Set width and height for OBJ_EDIT
-            ObjectSetInteger(0, label_name, OBJPROP_XSIZE, width - 20 - indent);  // Full panel width minus padding
-            ObjectSetInteger(0, label_name, OBJPROP_YSIZE, line_height);
-
+            // Set text AFTER all size/position properties
             ObjectSetString(0, label_name, OBJPROP_TEXT, wrapped_lines[line_idx]);
             ObjectSetInteger(0, label_name, OBJPROP_READONLY, true);  // Make it read-only
             ObjectSetInteger(0, label_name, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+            ObjectSetInteger(0, label_name, OBJPROP_ALIGN, ALIGN_LEFT);
 
             // Use yellow color for the latest comment to make it stand out
             color display_color = price_action_commentary[i].text_color;
