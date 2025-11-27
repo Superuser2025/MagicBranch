@@ -1553,63 +1553,43 @@ void DrawPriceActionCommentary()
             display_text = display_text + "  ◄◄◄ LATEST";  // Arrow points to newest comment
         }
 
-        // Wrap text into multiple lines if needed (500 chars per line for 2500px panel)
+        // Don't wrap - display full text on single line (OBJ_LABEL has no width limit)
         string wrapped_lines[];
-        WrapText(display_text, wrapped_lines, 500);
+        ArrayResize(wrapped_lines, 1);
+        wrapped_lines[0] = display_text;  // Full text, no wrapping
 
-        // Display each wrapped line
-        for(int line_idx = 0; line_idx < ArraySize(wrapped_lines); line_idx++)
+        // Display full text without wrapping using OBJ_LABEL (no width restrictions)
+        string label_name = prefix + "PAC_" + IntegerToString(display_line);
+
+        if(ObjectFind(0, label_name) < 0)
         {
-            string label_name = prefix + "PAC_" + IntegerToString(display_line);
-
-            // Indent continuation lines slightly
-            int indent = (line_idx > 0) ? 15 : 0;
-            int text_box_width = width - 20 - indent;  // Calculate width once
-
-            // Create OBJ_EDIT with width set immediately
-            if(ObjectFind(0, label_name) < 0)
-            {
-                ObjectCreate(0, label_name, OBJ_EDIT, 0, 0, 0);
-                // CRITICAL: Set width immediately after creation
-                ObjectSetInteger(0, label_name, OBJPROP_XSIZE, text_box_width);
-                ObjectSetInteger(0, label_name, OBJPROP_YSIZE, line_height);
-            }
-
-            ObjectSetInteger(0, label_name, OBJPROP_CORNER, CORNER_LEFT_UPPER);
-            ObjectSetInteger(0, label_name, OBJPROP_ANCHOR, ANCHOR_LEFT_UPPER);
-            ObjectSetInteger(0, label_name, OBJPROP_XDISTANCE, x + 10 + indent);
-            ObjectSetInteger(0, label_name, OBJPROP_YDISTANCE, y + 75 + display_line * line_height);
-
-            // Set width again to ensure it's applied (critical for OBJ_EDIT)
-            ObjectSetInteger(0, label_name, OBJPROP_XSIZE, text_box_width);
-            ObjectSetInteger(0, label_name, OBJPROP_YSIZE, line_height);
-
-            // Use bold font for headings OR for the latest comment (only on first line)
-            if((is_heading || is_latest) && line_idx == 0)
-                ObjectSetString(0, label_name, OBJPROP_FONT, "Arial Bold");
-            else
-                ObjectSetString(0, label_name, OBJPROP_FONT, "Consolas");  // Monospace font for sub-items
-
-            ObjectSetInteger(0, label_name, OBJPROP_FONTSIZE, is_heading ? 10 : 9);
-
-            // Set text AFTER all size/position properties
-            ObjectSetString(0, label_name, OBJPROP_TEXT, wrapped_lines[line_idx]);
-            ObjectSetInteger(0, label_name, OBJPROP_READONLY, true);  // Make it read-only
-            ObjectSetInteger(0, label_name, OBJPROP_BORDER_TYPE, BORDER_FLAT);
-            ObjectSetInteger(0, label_name, OBJPROP_ALIGN, ALIGN_LEFT);
-
-            // Use yellow color for the latest comment to make it stand out
-            color display_color = price_action_commentary[i].text_color;
-            if(is_latest)
-            {
-                display_color = clrYellow;  // Bright yellow for latest comment
-            }
-
-            ObjectSetInteger(0, label_name, OBJPROP_COLOR, display_color);
-            ObjectSetInteger(0, label_name, OBJPROP_BGCOLOR, C'10,15,25');  // Match panel background
-
-            display_line++;  // Move to next display line
+            ObjectCreate(0, label_name, OBJ_LABEL, 0, 0, 0);
         }
+
+        ObjectSetInteger(0, label_name, OBJPROP_CORNER, CORNER_LEFT_UPPER);
+        ObjectSetInteger(0, label_name, OBJPROP_ANCHOR, ANCHOR_LEFT_UPPER);
+        ObjectSetInteger(0, label_name, OBJPROP_XDISTANCE, x + 10);
+        ObjectSetInteger(0, label_name, OBJPROP_YDISTANCE, y + 75 + display_line * line_height);
+
+        // Use bold font for headings OR for the latest comment
+        if(is_heading || is_latest)
+            ObjectSetString(0, label_name, OBJPROP_FONT, "Arial Bold");
+        else
+            ObjectSetString(0, label_name, OBJPROP_FONT, "Consolas");
+
+        ObjectSetInteger(0, label_name, OBJPROP_FONTSIZE, is_heading ? 10 : 9);
+        ObjectSetString(0, label_name, OBJPROP_TEXT, display_text);  // Full text, no truncation
+
+        // Use yellow color for the latest comment to make it stand out
+        color display_color = price_action_commentary[i].text_color;
+        if(is_latest)
+        {
+            display_color = clrYellow;  // Bright yellow for latest comment
+        }
+
+        ObjectSetInteger(0, label_name, OBJPROP_COLOR, display_color);
+
+        display_line++;  // Move to next display line
     }
 
     // Show info message if no commentary yet
