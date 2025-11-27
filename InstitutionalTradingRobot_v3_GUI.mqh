@@ -1381,7 +1381,7 @@ void DrawPriceActionCommentary()
         return;
     }
 
-    int x = 20;    // Left side for maximum text space
+    int x = 750;   // Right side, below Real-Time Analysis
     int y = 465;   // Below Real-Time Analysis panel
     int width = 2500;  // Extra wide panel to ensure full educational commentary displays without any truncation
     int line_height = 20;
@@ -1553,9 +1553,9 @@ void DrawPriceActionCommentary()
             display_text = display_text + "  ◄◄◄ LATEST";  // Arrow points to newest comment
         }
 
-        // Wrap text into multiple lines (80 chars per line to ensure it fits on all screen sizes)
+        // Wrap text into multiple lines (240 chars per line for large screens)
         string wrapped_lines[];
-        WrapText(display_text, wrapped_lines, 80);
+        WrapText(display_text, wrapped_lines, 240);
 
         // Display each wrapped line using OBJ_LABEL
         for(int line_idx = 0; line_idx < ArraySize(wrapped_lines); line_idx++)
