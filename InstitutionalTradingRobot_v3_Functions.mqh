@@ -1536,36 +1536,9 @@ void PerformPriceActionAnalysis()
     // No need to add them to the historical commentary log
     // They're current state indicators, not historical events
 
-    // CRITICAL: Find the entry with the most recent timestamp among trading context entries
-    // This ensures "LATEST" arrow points to the truly newest event by time, not by code execution order
-    datetime most_recent_time = 0;
-    int most_recent_index = -1;
-
-    for(int i = 0; i < pa_commentary_count; i++)
-    {
-        if(price_action_commentary[i].is_trading_context &&
-           price_action_commentary[i].timestamp > most_recent_time)  // > so first match (lowest index = newest) wins
-        {
-            most_recent_time = price_action_commentary[i].timestamp;
-            most_recent_index = i;
-        }
-    }
-
-    // Set g_LatestCommentIndex to the most recent trading context entry
-    if(most_recent_index >= 0)
-    {
-        g_LatestCommentIndex = most_recent_index;
-    }
-    else if(pa_commentary_count > 0)
-    {
-        // Fallback: if no trading context entries found, point to the last entry
-        g_LatestCommentIndex = pa_commentary_count - 1;
-    }
-    else
-    {
-        // No entries at all
-        g_LatestCommentIndex = -1;
-    }
+    // NOTE: g_LatestCommentIndex is already set in AddPriceActionComment()
+    // when a new trading context comment is added. We don't need to search for it here.
+    // This ensures the LATEST tag stays on the most recently added comment.
 }
 
 //+------------------------------------------------------------------+
