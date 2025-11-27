@@ -1562,7 +1562,7 @@ void DrawPriceActionCommentary()
         {
             string label_name = prefix + "PAC_" + IntegerToString(display_line);
 
-            ObjectCreate(0, label_name, OBJ_LABEL, 0, 0, 0);
+            ObjectCreate(0, label_name, OBJ_EDIT, 0, 0, 0);
             ObjectSetInteger(0, label_name, OBJPROP_CORNER, CORNER_LEFT_UPPER);
             ObjectSetInteger(0, label_name, OBJPROP_ANCHOR, ANCHOR_LEFT_UPPER);
 
@@ -1578,7 +1578,14 @@ void DrawPriceActionCommentary()
             int indent = (line_idx > 0) ? 15 : 0;
             ObjectSetInteger(0, label_name, OBJPROP_XDISTANCE, x + 10 + indent);
             ObjectSetInteger(0, label_name, OBJPROP_YDISTANCE, y + 75 + display_line * line_height);  // Start after time headers
+
+            // Set width and height for OBJ_EDIT
+            ObjectSetInteger(0, label_name, OBJPROP_XSIZE, width - 20 - indent);  // Full panel width minus padding
+            ObjectSetInteger(0, label_name, OBJPROP_YSIZE, line_height);
+
             ObjectSetString(0, label_name, OBJPROP_TEXT, wrapped_lines[line_idx]);
+            ObjectSetInteger(0, label_name, OBJPROP_READONLY, true);  // Make it read-only
+            ObjectSetInteger(0, label_name, OBJPROP_BORDER_TYPE, BORDER_FLAT);
 
             // Use yellow color for the latest comment to make it stand out
             color display_color = price_action_commentary[i].text_color;
@@ -1588,6 +1595,7 @@ void DrawPriceActionCommentary()
             }
 
             ObjectSetInteger(0, label_name, OBJPROP_COLOR, display_color);
+            ObjectSetInteger(0, label_name, OBJPROP_BGCOLOR, C'10,15,25');  // Match panel background
 
             display_line++;  // Move to next display line
         }
