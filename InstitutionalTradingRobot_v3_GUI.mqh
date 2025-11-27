@@ -1487,14 +1487,15 @@ void DrawPriceActionCommentary()
         ObjectDelete(0, prefix + "PAC_Placeholder");
     }
 
-    // Loop FORWARD through array: newest (lowest index based on actual timestamps) displays first (top)
+    // Loop BACKWARD through array to show NEWEST messages on TOP
     int display_line = 0;
 
     // DEBUG LOGGING
     Print("=== COMMENTARY DISPLAY DEBUG ===");
     Print("pa_commentary_count=", pa_commentary_count, ", start_index=", start_index, ", g_LatestCommentIndex=", g_LatestCommentIndex);
 
-    for(int i = start_index; i < pa_commentary_count; i++)
+    // Loop from newest (highest index) to oldest (start_index) to display newest on top
+    for(int i = pa_commentary_count - 1; i >= start_index; i--)
     {
         // Check if this is the latest trading context comment
         bool is_latest = (i == g_LatestCommentIndex);
