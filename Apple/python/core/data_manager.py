@@ -210,7 +210,13 @@ class DataManager:
         try:
             timestamp = data.get('timestamp')
             if timestamp:
-                self.last_update = datetime.fromisoformat(timestamp) if isinstance(timestamp, str) else timestamp
+                # Handle both string ISO format and integer Unix timestamp
+                if isinstance(timestamp, str):
+                    self.last_update = datetime.fromisoformat(timestamp)
+                elif isinstance(timestamp, (int, float)):
+                    self.last_update = datetime.fromtimestamp(timestamp)
+                else:
+                    self.last_update = datetime.now()
 
             # Update price
             if 'price' in data:
@@ -222,7 +228,13 @@ class DataManager:
 
             # Update filter status
             if 'filters' in data:
-                self.filter_status.update(data['filters'])
+                filters = data['filters']
+                # Handle both dict and list formats
+                if isinstance(filters, dict):
+                    self.filter_status.update(filters)
+                elif isinstance(filters, list):
+                    # EA sends array of 20 filter states - store as-is
+                    self.filter_status = filters
 
             # Update trade decision
             if 'decision' in data:
