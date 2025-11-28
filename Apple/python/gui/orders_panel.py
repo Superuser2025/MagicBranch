@@ -82,7 +82,7 @@ class OrdersPanel(QWidget):
                 font-weight: 600;
             }}
             QPushButton:hover {{
-                background-color: {settings.theme.bearish_dark};
+                background-color: {settings.theme.danger};
             }}
         """)
         header_layout.addWidget(close_all_btn)
@@ -376,7 +376,7 @@ class OrdersPanel(QWidget):
                         font-weight: 600;
                     }}
                     QPushButton:hover {{
-                        background-color: {settings.theme.bearish_dark};
+                        background-color: {settings.theme.danger};
                     }}
                 """)
                 self.positions_table.setCellWidget(row, 6, close_btn)
