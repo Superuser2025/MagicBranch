@@ -422,21 +422,19 @@ class DashboardPanel(QWidget):
                 active = market_state.get(key, False)
                 self.update_filter_indicator(label, key.replace('_ok', '').upper(), active)
 
-            # Update pattern
+            # Update pattern (EA sends pattern as string like "NONE", "DOUBLE_TOP", etc.)
             pattern = market_state.get('pattern')
-            if pattern and pattern.get('name'):
-                pattern_text = f"{pattern.get('name')} [{pattern.get('strength', 0)}★]"
-                pattern_color = settings.theme.success if pattern.get('is_bullish') else settings.theme.danger
-                self.pattern_name_label.setText(pattern_text)
+            if pattern and isinstance(pattern, str) and pattern != "NONE":
+                self.pattern_name_label.setText(pattern)
                 self.pattern_name_label.setStyleSheet(f"""
                     QLabel {{
-                        color: {pattern_color};
+                        color: {settings.theme.accent};
                         font-size: {settings.theme.font_size_md}px;
                         font-weight: 600;
                         padding: 8px;
                         background-color: {settings.theme.surface_light};
                         border-radius: 6px;
-                        border: 1px solid {pattern_color};
+                        border: 1px solid {settings.theme.accent};
                     }}
                 """)
             else:
