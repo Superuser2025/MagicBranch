@@ -619,9 +619,9 @@ void ExportMarketDataToJSON()
 
    //--- Market info
    jsonExporter.AddString("symbol", Symbol());
-   jsonExporter.AddDouble("bid", Bid());
-   jsonExporter.AddDouble("ask", Ask());
-   jsonExporter.AddDouble("spread", currentSpread);
+   jsonExporter.AddDouble("bid", Bid(), 5);
+   jsonExporter.AddDouble("ask", Ask(), 5);
+   jsonExporter.AddDouble("spread", currentSpread, 2);
    jsonExporter.AddString("timeframe", EnumToString(Period()));
    jsonExporter.AddLong("timestamp", TimeCurrent());
 
@@ -629,7 +629,7 @@ void ExportMarketDataToJSON()
    jsonExporter.AddString("bias", currentBias);
    jsonExporter.AddString("regime", currentRegime);
    jsonExporter.AddString("session", currentSession);
-   jsonExporter.AddDouble("volatility", currentVolatility);
+   jsonExporter.AddDouble("volatility", currentVolatility, 4);
 
    //--- Pattern info
    jsonExporter.AddString("pattern", currentPattern);
@@ -638,30 +638,30 @@ void ExportMarketDataToJSON()
    jsonExporter.BeginArray("filters");
    for(int i = 0; i < 20; i++)
    {
-      jsonExporter.AddBool(filterStates[i]);
+      jsonExporter.AddArrayBool(filterStates[i]);
    }
    jsonExporter.EndArray();
 
    jsonExporter.AddInt("passed_filters", passedFilters);
-   jsonExporter.AddDouble("confluence", confluenceScore);
+   jsonExporter.AddDouble("confluence", confluenceScore, 2);
 
    //--- Trading status
    jsonExporter.AddBool("auto_trading", EnableAutoTrading);
    jsonExporter.AddInt("positions", totalPositions);
-   jsonExporter.AddDouble("total_pnl", totalPnL);
+   jsonExporter.AddDouble("total_pnl", totalPnL, 2);
    jsonExporter.AddInt("trades_today", tradesExecutedToday);
-   jsonExporter.AddDouble("today_pnl", todayProfitLoss);
+   jsonExporter.AddDouble("today_pnl", todayProfitLoss, 2);
 
    //--- ML data
    jsonExporter.AddBool("ml_enabled", mlEnabled);
    jsonExporter.AddString("ml_signal", mlSignal);
-   jsonExporter.AddDouble("ml_probability", mlProbability);
-   jsonExporter.AddDouble("ml_confidence", mlConfidence);
+   jsonExporter.AddDouble("ml_probability", mlProbability, 4);
+   jsonExporter.AddDouble("ml_confidence", mlConfidence, 4);
 
    //--- Risk metrics
-   jsonExporter.AddDouble("account_balance", AccountInfoDouble(ACCOUNT_BALANCE));
-   jsonExporter.AddDouble("account_equity", AccountInfoDouble(ACCOUNT_EQUITY));
-   jsonExporter.AddDouble("risk_percent", RiskPercentage);
+   jsonExporter.AddDouble("account_balance", AccountInfoDouble(ACCOUNT_BALANCE), 2);
+   jsonExporter.AddDouble("account_equity", AccountInfoDouble(ACCOUNT_EQUITY), 2);
+   jsonExporter.AddDouble("risk_percent", RiskPercentage, 2);
 
    jsonExporter.EndExport();
 }
@@ -678,16 +678,16 @@ void ProcessPythonCommands()
    //--- Process different commands
    if(command == "PLACE_ORDER")
    {
-      string orderType = jsonReader.GetString("type");
-      double volume = jsonReader.GetDouble("volume");
-      double sl = jsonReader.GetDouble("sl");
-      double tp = jsonReader.GetDouble("tp");
+      string orderType = jsonReader.GetString("type", "");
+      double volume = jsonReader.GetDouble("volume", 0.0);
+      double sl = jsonReader.GetDouble("sl", 0.0);
+      double tp = jsonReader.GetDouble("tp", 0.0);
 
       PlaceOrder(orderType, volume, sl, tp);
    }
    else if(command == "CLOSE_POSITION")
    {
-      long ticket = jsonReader.GetLong("ticket");
+      long ticket = jsonReader.GetLong("ticket", 0);
       ClosePosition(ticket);
    }
    else if(command == "CLOSE_ALL")
@@ -767,10 +767,10 @@ void UpdateSettingsFromPython()
 //+------------------------------------------------------------------+
 void UpdateMLDataFromPython()
 {
-   mlEnabled = jsonReader.GetBool("enabled");
-   mlSignal = jsonReader.GetString("signal");
-   mlProbability = jsonReader.GetDouble("probability");
-   mlConfidence = jsonReader.GetDouble("confidence");
+   mlEnabled = jsonReader.GetBool("enabled", false);
+   mlSignal = jsonReader.GetString("signal", "WAIT");
+   mlProbability = jsonReader.GetDouble("probability", 0.0);
+   mlConfidence = jsonReader.GetDouble("confidence", 0.0);
 
    Print("ML Data Updated: ", mlSignal, " | Prob: ", mlProbability, " | Conf: ", mlConfidence);
 }

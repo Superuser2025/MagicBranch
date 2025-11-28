@@ -44,10 +44,10 @@ public:
    bool              HasNewCommand();
 
    //--- Data retrieval methods
-   string            GetString(string key, string defaultValue = "");
-   double            GetDouble(string key, double defaultValue = 0.0);
-   long              GetLong(string key, long defaultValue = 0);
-   bool              GetBool(string key, bool defaultValue = false);
+   string            GetString(string key, string defaultValue);
+   double            GetDouble(string key, double defaultValue);
+   long              GetLong(string key, long defaultValue);
+   bool              GetBool(string key, bool defaultValue);
 
    //--- Utility
    void              ClearData();
@@ -346,7 +346,7 @@ bool CJSONReader::IsNumeric(string str)
 //+------------------------------------------------------------------+
 //| Get string value by key                                          |
 //+------------------------------------------------------------------+
-string CJSONReader::GetString(string key, string defaultValue = "")
+string CJSONReader::GetString(string key, string defaultValue)
 {
    for(int i = 0; i < ArraySize(m_stringKeys); i++)
    {
@@ -361,7 +361,7 @@ string CJSONReader::GetString(string key, string defaultValue = "")
 //+------------------------------------------------------------------+
 //| Get double value by key                                          |
 //+------------------------------------------------------------------+
-double CJSONReader::GetDouble(string key, double defaultValue = 0.0)
+double CJSONReader::GetDouble(string key, double defaultValue)
 {
    for(int i = 0; i < ArraySize(m_doubleKeys); i++)
    {
@@ -376,7 +376,7 @@ double CJSONReader::GetDouble(string key, double defaultValue = 0.0)
 //+------------------------------------------------------------------+
 //| Get long value by key                                            |
 //+------------------------------------------------------------------+
-long CJSONReader::GetLong(string key, long defaultValue = 0)
+long CJSONReader::GetLong(string key, long defaultValue)
 {
    for(int i = 0; i < ArraySize(m_longKeys); i++)
    {
@@ -391,7 +391,7 @@ long CJSONReader::GetLong(string key, long defaultValue = 0)
 //+------------------------------------------------------------------+
 //| Get bool value by key                                            |
 //+------------------------------------------------------------------+
-bool CJSONReader::GetBool(string key, bool defaultValue = false)
+bool CJSONReader::GetBool(string key, bool defaultValue)
 {
    for(int i = 0; i < ArraySize(m_boolKeys); i++)
    {

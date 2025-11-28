@@ -39,7 +39,7 @@ public:
    void              AddString(string key, string value);
    void              AddInt(string key, int value);
    void              AddLong(string key, long value);
-   void              AddDouble(string key, double value, int digits = 5);
+   void              AddDouble(string key, double value, int digits);
    void              AddBool(string key, bool value);
 
    //--- Array methods
@@ -47,7 +47,7 @@ public:
    void              EndArray();
    void              AddArrayString(string value);
    void              AddArrayInt(int value);
-   void              AddArrayDouble(double value, int digits = 5);
+   void              AddArrayDouble(double value, int digits);
    void              AddArrayBool(bool value);
 
    //--- Object methods
@@ -210,7 +210,7 @@ void CJSONExporter::AddLong(string key, long value)
 //+------------------------------------------------------------------+
 //| Add double value                                                 |
 //+------------------------------------------------------------------+
-void CJSONExporter::AddDouble(string key, double value, int digits = 5)
+void CJSONExporter::AddDouble(string key, double value, int digits)
 {
    if(!m_firstElement)
       m_jsonContent += ",\n";
@@ -296,7 +296,7 @@ void CJSONExporter::AddArrayInt(int value)
 //+------------------------------------------------------------------+
 //| Add double to array                                              |
 //+------------------------------------------------------------------+
-void CJSONExporter::AddArrayDouble(double value, int digits = 5)
+void CJSONExporter::AddArrayDouble(double value, int digits)
 {
    if(!m_firstElement)
       m_jsonContent += ", ";

@@ -9,11 +9,6 @@
 #property version   "1.00"
 #property strict
 
-//--- Indicator handles
-int handle_ema200;
-int handle_rsi;
-int handle_atr;
-
 //+------------------------------------------------------------------+
 //| CFilters Class                                                   |
 //| Implements all 20 institutional filters                          |
