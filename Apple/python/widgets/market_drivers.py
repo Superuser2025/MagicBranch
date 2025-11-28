@@ -281,7 +281,7 @@ class MarketDriversWidget(QWidget):
             details_label.setWordWrap(True)
             details_label.setStyleSheet(f"""
                 QLabel {{
-                    color: {settings.theme.text_tertiary};
+                    color: {settings.theme.text_disabled};
                     font-size: {settings.theme.font_size_xs}px;
                     padding-left: 28px;
                     background: transparent;
@@ -340,7 +340,7 @@ class MarketDriversWidget(QWidget):
         desc_label.setWordWrap(True)
         desc_label.setStyleSheet(f"""
             QLabel {{
-                color: {settings.theme.text_tertiary};
+                color: {settings.theme.text_disabled};
                 font-size: {settings.theme.font_size_xs}px;
                 padding-left: 20px;
                 background: transparent;
