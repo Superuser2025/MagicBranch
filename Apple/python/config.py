@@ -8,23 +8,60 @@ from dataclasses import dataclass, field
 from typing import Dict, List
 from enum import Enum
 import json
+import os
+
+
+def get_mt5_common_path():
+    """
+    Automatically detect MT5 Common folder path
+    Returns Path to MT5 Terminal/Common/Files directory
+    """
+    # MT5 Common folder is typically at:
+    # C:\Users\<Username>\AppData\Roaming\MetaQuotes\Terminal\Common\Files
+
+    appdata = os.environ.get('APPDATA')  # Get Windows AppData path
+    if appdata:
+        mt5_common = Path(appdata) / "MetaQuotes" / "Terminal" / "Common" / "Files"
+        if mt5_common.exists():
+            return mt5_common
+
+    # Fallback: Try to find it in user's home directory
+    home = Path.home()
+    mt5_common = home / "AppData" / "Roaming" / "MetaQuotes" / "Terminal" / "Common" / "Files"
+    if mt5_common.exists():
+        return mt5_common
+
+    # If not found, return None (will use local directory as fallback)
+    print("⚠ Warning: MT5 Common folder not found, using local directory")
+    return None
+
 
 # Base paths
 BASE_DIR = Path(__file__).parent.parent
 SHARED_DIR = BASE_DIR / "shared"
-IPC_DIR = SHARED_DIR / "ipc"
 DATA_DIR = SHARED_DIR / "data"
 ML_DATA_DIR = DATA_DIR / "ml_data"
+
+# Try to use MT5 Common folder for IPC, fallback to local directory
+MT5_COMMON_PATH = get_mt5_common_path()
+if MT5_COMMON_PATH:
+    IPC_DIR = MT5_COMMON_PATH / "AppleTrader"
+    print(f"✓ Using MT5 Common folder: {IPC_DIR}")
+else:
+    IPC_DIR = SHARED_DIR / "ipc"
+    print(f"✓ Using local IPC folder: {IPC_DIR}")
 
 # Ensure directories exist
 IPC_DIR.mkdir(parents=True, exist_ok=True)
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 ML_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-# IPC File paths
+# IPC File paths (these files are in MT5 Common/Files/AppleTrader/)
 MARKET_DATA_FILE = IPC_DIR / "market_data.json"
 COMMANDS_FILE = IPC_DIR / "commands.json"
 STATUS_FILE = IPC_DIR / "status.json"
+
+print(f"📁 Market data file: {MARKET_DATA_FILE}")
 
 # Data persistence
 SETTINGS_FILE = DATA_DIR / "settings.json"
