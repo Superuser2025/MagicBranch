@@ -212,6 +212,10 @@ int OnInit()
    //--- Initialize daily tracking
    lastDayReset = TimeCurrent();
 
+   //--- Set timer to ensure export happens even without ticks
+   EventSetTimer(DataExportInterval / 1000);  // Timer in seconds
+   Print("Timer set for ", DataExportInterval / 1000, " seconds");
+
    Print("═══════════════════════════════════════════════════════════");
    Print("Initialization Complete - System Ready");
    Print("═══════════════════════════════════════════════════════════");
@@ -227,6 +231,9 @@ void OnDeinit(const int reason)
    Print("═══════════════════════════════════════════════════════════");
    Print("AppleTrader Pro - Shutting Down");
    Print("Reason: ", GetDeinitReasonText(reason));
+
+   //--- Kill timer
+   EventKillTimer();
 
    //--- Clean up zones
    zones.RemoveAllZones();
@@ -266,11 +273,20 @@ void OnTick()
 }
 
 //+------------------------------------------------------------------+
-//| Timer function (called every second)                             |
+//| Timer function (exports data at regular intervals)              |
 //+------------------------------------------------------------------+
 void OnTimer()
 {
-   //--- Additional periodic tasks can be added here
+   Print("[TIMER] Timer triggered - Exporting market data...");
+
+   //--- Export market data
+   ExportMarketDataToJSON();
+
+   //--- Read commands from Python GUI
+   ProcessPythonCommands();
+
+   //--- Update market analysis
+   UpdateMarketAnalysis();
 }
 
 //+------------------------------------------------------------------+
@@ -608,6 +624,8 @@ void ExecuteSellSignal()
 //+------------------------------------------------------------------+
 void ExportMarketDataToJSON()
 {
+   Print("[EXPORT] Starting market data export...");
+
    //--- Collect position data
    int totalPositions = PositionsTotal();
    double totalPnL = 0.0;
@@ -619,6 +637,8 @@ void ExportMarketDataToJSON()
          totalPnL += PositionGetDouble(POSITION_PROFIT);
       }
    }
+
+   Print("[EXPORT] Building JSON data...");
 
    //--- Export comprehensive market data
    jsonExporter.BeginExport();
@@ -669,7 +689,17 @@ void ExportMarketDataToJSON()
    jsonExporter.AddDouble("account_equity", AccountInfoDouble(ACCOUNT_EQUITY), 2);
    jsonExporter.AddDouble("risk_percent", RiskPercentage, 2);
 
-   jsonExporter.EndExport();
+   Print("[EXPORT] Writing JSON to file...");
+   bool success = jsonExporter.EndExport();
+
+   if(success)
+   {
+      Print("[EXPORT] ✓ Market data successfully exported to ", ExportFilePath);
+   }
+   else
+   {
+      Print("[EXPORT] ✗ FAILED to export market data!");
+   }
 }
 
 //+------------------------------------------------------------------+

@@ -134,17 +134,26 @@ bool CJSONExporter::EndExport()
    //--- Close JSON
    m_jsonContent += "\n}";
 
+   Print("[JSON] Attempting to write to: ", m_filePath);
+   Print("[JSON] Content size: ", StringLen(m_jsonContent), " characters");
+
    //--- Write to file
    m_fileHandle = FileOpen(m_filePath, FILE_WRITE | FILE_COMMON | FILE_TXT | FILE_ANSI);
 
    if(m_fileHandle == INVALID_HANDLE)
    {
-      Print("Failed to open file for writing: ", m_filePath, " Error: ", GetLastError());
+      int errorCode = ::GetLastError();
+      Print("[JSON] ✗ Failed to open file for writing: ", m_filePath);
+      Print("[JSON] Error code: ", errorCode);
       return false;
    }
 
+   Print("[JSON] File opened successfully, handle: ", m_fileHandle);
+
    //--- Write content
    uint bytesWritten = FileWriteString(m_fileHandle, m_jsonContent);
+
+   Print("[JSON] Bytes written: ", bytesWritten);
 
    //--- Close file
    FileClose(m_fileHandle);
@@ -152,10 +161,11 @@ bool CJSONExporter::EndExport()
 
    if(bytesWritten == 0)
    {
-      Print("Failed to write JSON content to file");
+      Print("[JSON] ✗ Failed to write JSON content (0 bytes written)");
       return false;
    }
 
+   Print("[JSON] ✓ File closed successfully");
    return true;
 }
 
