@@ -433,6 +433,6 @@ void CJSONReader::DeleteCommandFile()
 //+------------------------------------------------------------------+
 string CJSONReader::GetLastError()
 {
-   int error = GetLastError();
-   return "Error " + IntegerToString(error);
+   int errorCode = ::GetLastError();
+   return "Error " + IntegerToString(errorCode);
 }

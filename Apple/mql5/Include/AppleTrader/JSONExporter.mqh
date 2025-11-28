@@ -101,10 +101,10 @@ bool CJSONExporter::Init(string filePath)
       //--- Create directory if it doesn't exist
       if(!FolderCreate(directory, FILE_COMMON))
       {
-         int error = GetLastError();
-         if(error != 5019)  // 5019 = folder already exists (not an error)
+         int errorCode = ::GetLastError();
+         if(errorCode != 5019)  // 5019 = folder already exists (not an error)
          {
-            Print("Failed to create directory: ", directory, " Error: ", error);
+            Print("Failed to create directory: ", directory, " Error: ", errorCode);
             return false;
          }
       }
@@ -382,6 +382,6 @@ string CJSONExporter::EscapeString(string str)
 //+------------------------------------------------------------------+
 string CJSONExporter::GetLastError()
 {
-   int error = GetLastError();
-   return "Error " + IntegerToString(error) + ": " + ErrorDescription(error);
+   int errorCode = ::GetLastError();
+   return "Error " + IntegerToString(errorCode);
 }
