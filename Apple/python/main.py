@@ -44,8 +44,7 @@ def main():
     app.setApplicationVersion(settings.app.version)
     app.setOrganizationName("AppleTrader")
 
-    # Enable high DPI scaling
-    app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps)
+    # Note: AA_UseHighDpiPixmaps is deprecated in PyQt6 - high DPI support is enabled by default
 
     # Set application-wide stylesheet (dark theme)
     app.setStyleSheet(get_application_stylesheet())
