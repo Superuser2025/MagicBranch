@@ -180,7 +180,6 @@ class ControlsPanel(QWidget):
                 background-color: {settings.theme.success};
             }}
             QPushButton:hover {{
-                transform: translateY(-2px);
             }}
         """)
         layout.addWidget(self.mode_button)
@@ -300,10 +299,8 @@ class ControlsPanel(QWidget):
             }}
             QPushButton:hover {{
                 background-color: {settings.theme.bullish};
-                transform: scale(1.02);
             }}
             QPushButton:pressed {{
-                transform: scale(0.98);
             }}
         """)
         button_layout.addWidget(buy_button)
@@ -323,10 +320,8 @@ class ControlsPanel(QWidget):
             }}
             QPushButton:hover {{
                 background-color: {settings.theme.bearish};
-                transform: scale(1.02);
             }}
             QPushButton:pressed {{
-                transform: scale(0.98);
             }}
         """)
         button_layout.addWidget(sell_button)
@@ -400,7 +395,6 @@ class ControlsPanel(QWidget):
             }}
             QSlider::handle:horizontal:hover {{
                 background: {settings.theme.success};
-                transform: scale(1.2);
             }}
             QSlider::sub-page:horizontal {{
                 background: {settings.theme.accent};
@@ -647,7 +641,6 @@ class ControlsPanel(QWidget):
                     font-weight: 700;
                 }}
                 QPushButton:hover {{
-                    transform: translateY(-2px);
                 }}
             """)
             logger.info("Trading mode: AUTO TRADING enabled")
@@ -663,7 +656,6 @@ class ControlsPanel(QWidget):
                     font-weight: 700;
                 }}
                 QPushButton:hover {{
-                    transform: translateY(-2px);
                 }}
             """)
             logger.info("Trading mode: INDICATOR MODE (safe)")

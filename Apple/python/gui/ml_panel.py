@@ -165,7 +165,7 @@ class MLPanel(QWidget):
         self.signal_label.setStyleSheet(f"""
             QLabel {{
                 color: {settings.theme.warning};
-                font-size: {settings.theme.font_size_3xl}px;
+                font-size: {settings.theme.font_size_xxl}px;
                 font-weight: 700;
                 padding: 16px;
                 background-color: {settings.theme.surface_light};
@@ -451,7 +451,7 @@ class MLPanel(QWidget):
             self.signal_label.setStyleSheet(f"""
                 QLabel {{
                     color: {text_color};
-                    font-size: {settings.theme.font_size_3xl}px;
+                    font-size: {settings.theme.font_size_xxl}px;
                     font-weight: 700;
                     padding: 16px;
                     background-color: {settings.theme.surface_light};
