@@ -175,6 +175,7 @@ class DataManager:
 
         # Positions
         self.positions = []
+        self.position_count = 0  # Separate count from EA
 
         # Account info
         self.account = {
@@ -262,7 +263,13 @@ class DataManager:
 
             # Update positions
             if 'positions' in data:
-                self.positions = data['positions']
+                positions_data = data['positions']
+                # EA sends position count as int, not a list
+                if isinstance(positions_data, (int, float)):
+                    self.position_count = int(positions_data)
+                elif isinstance(positions_data, list):
+                    self.positions = positions_data
+                    self.position_count = len(positions_data)
 
             # Update account
             if 'account' in data:
@@ -295,12 +302,19 @@ class DataManager:
 
     def get_market_state(self) -> Dict:
         """Get current market state"""
-        return {
+        result = {
             **self.market_state,
-            **self.filter_status,
             'decision': self.trade_decision,
             'pattern': self.active_pattern,
         }
+
+        # Handle filter_status as either dict or list
+        if isinstance(self.filter_status, dict):
+            result.update(self.filter_status)
+        else:
+            result['filters'] = self.filter_status
+
+        return result
 
     def get_zones(self) -> Dict:
         """Get all trading zones"""
@@ -309,6 +323,10 @@ class DataManager:
     def get_positions(self) -> List[Dict]:
         """Get open positions"""
         return self.positions.copy()
+
+    def get_position_count(self) -> int:
+        """Get number of open positions"""
+        return self.position_count
 
     def get_account_summary(self) -> Dict:
         """Get account summary"""
