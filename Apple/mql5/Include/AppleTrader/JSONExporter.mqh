@@ -55,7 +55,7 @@ public:
    void              EndObject();
 
    //--- Utility
-   string            EscapeString(string input);
+   string            EscapeString(string str);
    string            GetLastError();
 };
 
@@ -355,9 +355,9 @@ void CJSONExporter::EndObject()
 //+------------------------------------------------------------------+
 //| Escape special characters in strings                             |
 //+------------------------------------------------------------------+
-string CJSONExporter::EscapeString(string input)
+string CJSONExporter::EscapeString(string str)
 {
-   string output = input;
+   string output = str;
 
    //--- Replace backslash first
    StringReplace(output, "\\", "\\\\");

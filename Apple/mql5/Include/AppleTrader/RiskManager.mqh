@@ -38,10 +38,10 @@ public:
    double            CalculatePositionSizeFromDistance(string symbol, double entryPrice, double stopLoss);
 
    //--- Risk checks
-   bool              CanTrade(int tradesExecutedToday, double todayPnL);
+   bool              CanTrade(int numTradesToday, double todayPnL);
    bool              IsWithinDailyLossLimit(double todayPnL);
    bool              IsWithinDailyProfitTarget(double todayPnL);
-   bool              IsWithinTradeLimit(int tradesExecutedToday);
+   bool              IsWithinTradeLimit(int numTradesToday);
    bool              IsWithinDrawdownLimit();
 
    //--- Utility
@@ -198,7 +198,7 @@ double CRiskManager::CalculatePositionSizeFromDistance(string symbol, double ent
 //+------------------------------------------------------------------+
 //| Check if trading is allowed                                      |
 //+------------------------------------------------------------------+
-bool CRiskManager::CanTrade(int tradesExecutedToday, double todayPnL)
+bool CRiskManager::CanTrade(int numTradesToday, double todayPnL)
 {
    //--- Check daily loss limit
    if(!IsWithinDailyLossLimit(todayPnL))
@@ -215,7 +215,7 @@ bool CRiskManager::CanTrade(int tradesExecutedToday, double todayPnL)
    }
 
    //--- Check trade limit
-   if(!IsWithinTradeLimit(tradesExecutedToday))
+   if(!IsWithinTradeLimit(numTradesToday))
    {
       Print("Trading stopped: Daily trade limit reached");
       return false;
@@ -269,9 +269,9 @@ bool CRiskManager::IsWithinDailyProfitTarget(double todayPnL)
 //+------------------------------------------------------------------+
 //| Check if within daily trade limit                                |
 //+------------------------------------------------------------------+
-bool CRiskManager::IsWithinTradeLimit(int tradesExecutedToday)
+bool CRiskManager::IsWithinTradeLimit(int numTradesToday)
 {
-   if(tradesExecutedToday >= m_maxDailyTrades)
+   if(numTradesToday >= m_maxDailyTrades)
    {
       return false;
    }

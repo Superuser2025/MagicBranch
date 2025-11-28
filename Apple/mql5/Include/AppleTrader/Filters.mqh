@@ -57,10 +57,10 @@ public:
    // bool           CheckSessionFilter();
 
    //--- Filter 6: Spread Filter
-   bool              CheckSpreadFilter(double currentSpread);
+   bool              CheckSpreadFilter(double spread);
 
    //--- Filter 7: Volatility Filter
-   bool              CheckVolatilityFilter(double currentVolatility);
+   bool              CheckVolatilityFilter(double volatility);
 
    //--- Filter 8: News Filter
    bool              CheckNewsFilter();
@@ -305,22 +305,22 @@ bool CFilters::CheckMarketStructure()
 //| Filter 6: Spread Filter                                          |
 //| Ensures spread is within acceptable range                        |
 //+------------------------------------------------------------------+
-bool CFilters::CheckSpreadFilter(double currentSpread)
+bool CFilters::CheckSpreadFilter(double spread)
 {
-   return currentSpread <= m_maxSpread;
+   return spread <= m_maxSpread;
 }
 
 //+------------------------------------------------------------------+
 //| Filter 7: Volatility Filter                                      |
 //| Ensures market is not too volatile                               |
 //+------------------------------------------------------------------+
-bool CFilters::CheckVolatilityFilter(double currentVolatility)
+bool CFilters::CheckVolatilityFilter(double volatility)
 {
    //--- Update stored volatility
-   m_volatility = currentVolatility;
+   m_volatility = volatility;
 
    //--- Check if volatility is within acceptable range
-   if(currentVolatility > 0 && currentVolatility < m_maxVolatility)
+   if(volatility > 0 && volatility < m_maxVolatility)
    {
       return true;
    }

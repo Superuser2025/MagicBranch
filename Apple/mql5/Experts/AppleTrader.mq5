@@ -282,7 +282,7 @@ void UpdateMarketAnalysis()
    currentSession = GetCurrentSession();
 
    //--- Update spread and volatility
-   currentSpread = (Ask() - Bid()) / Point();
+   currentSpread = (SymbolInfoDouble(Symbol(), SYMBOL_ASK) - SymbolInfoDouble(Symbol(), SYMBOL_BID)) / _Point;
    currentVolatility = filters.CalculateVolatility();
 
    //--- Run all filters
@@ -541,20 +541,23 @@ void ExecuteBuySignal()
    //--- Calculate position size
    double lotSize = riskManager.CalculatePositionSize(Symbol(), RiskPercentage);
 
+   //--- Get current prices
+   double askPrice = SymbolInfoDouble(Symbol(), SYMBOL_ASK);
+
    //--- Calculate SL and TP
-   double sl = zones.GetNearestDemandZone() - 10 * Point();
-   double tp = Ask() + (Ask() - sl) * 2.0;  // 1:2 Risk:Reward
+   double sl = zones.GetNearestDemandZone() - 10 * _Point;
+   double tp = askPrice + (askPrice - sl) * 2.0;  // 1:2 Risk:Reward
 
    //--- Require confirmation if enabled
    if(RequireConfirmation)
    {
       Print("BUY Signal Generated - Awaiting Manual Confirmation");
-      Print("Entry: ", Ask(), " | SL: ", sl, " | TP: ", tp, " | Size: ", lotSize);
+      Print("Entry: ", askPrice, " | SL: ", sl, " | TP: ", tp, " | Size: ", lotSize);
       return;
    }
 
    //--- Execute trade
-   if(trade.Buy(lotSize, Symbol(), Ask(), sl, tp, "AppleTrader BUY"))
+   if(trade.Buy(lotSize, Symbol(), askPrice, sl, tp, "AppleTrader BUY"))
    {
       Print("BUY Order Executed: ", trade.ResultOrder());
       tradesExecutedToday++;
@@ -573,20 +576,23 @@ void ExecuteSellSignal()
    //--- Calculate position size
    double lotSize = riskManager.CalculatePositionSize(Symbol(), RiskPercentage);
 
+   //--- Get current prices
+   double bidPrice = SymbolInfoDouble(Symbol(), SYMBOL_BID);
+
    //--- Calculate SL and TP
-   double sl = zones.GetNearestSupplyZone() + 10 * Point();
-   double tp = Bid() - (sl - Bid()) * 2.0;  // 1:2 Risk:Reward
+   double sl = zones.GetNearestSupplyZone() + 10 * _Point;
+   double tp = bidPrice - (sl - bidPrice) * 2.0;  // 1:2 Risk:Reward
 
    //--- Require confirmation if enabled
    if(RequireConfirmation)
    {
       Print("SELL Signal Generated - Awaiting Manual Confirmation");
-      Print("Entry: ", Bid(), " | SL: ", sl, " | TP: ", tp, " | Size: ", lotSize);
+      Print("Entry: ", bidPrice, " | SL: ", sl, " | TP: ", tp, " | Size: ", lotSize);
       return;
    }
 
    //--- Execute trade
-   if(trade.Sell(lotSize, Symbol(), Bid(), sl, tp, "AppleTrader SELL"))
+   if(trade.Sell(lotSize, Symbol(), bidPrice, sl, tp, "AppleTrader SELL"))
    {
       Print("SELL Order Executed: ", trade.ResultOrder());
       tradesExecutedToday++;
@@ -619,8 +625,8 @@ void ExportMarketDataToJSON()
 
    //--- Market info
    jsonExporter.AddString("symbol", Symbol());
-   jsonExporter.AddDouble("bid", Bid(), 5);
-   jsonExporter.AddDouble("ask", Ask(), 5);
+   jsonExporter.AddDouble("bid", SymbolInfoDouble(Symbol(), SYMBOL_BID), 5);
+   jsonExporter.AddDouble("ask", SymbolInfoDouble(Symbol(), SYMBOL_ASK), 5);
    jsonExporter.AddDouble("spread", currentSpread, 2);
    jsonExporter.AddString("timeframe", EnumToString(Period()));
    jsonExporter.AddLong("timestamp", TimeCurrent());
@@ -711,11 +717,13 @@ void PlaceOrder(string orderType, double volume, double sl, double tp)
 {
    if(orderType == "BUY")
    {
-      trade.Buy(volume, Symbol(), Ask(), sl, tp, "AppleTrader GUI BUY");
+      double askPrice = SymbolInfoDouble(Symbol(), SYMBOL_ASK);
+      trade.Buy(volume, Symbol(), askPrice, sl, tp, "AppleTrader GUI BUY");
    }
    else if(orderType == "SELL")
    {
-      trade.Sell(volume, Symbol(), Bid(), sl, tp, "AppleTrader GUI SELL");
+      double bidPrice = SymbolInfoDouble(Symbol(), SYMBOL_BID);
+      trade.Sell(volume, Symbol(), bidPrice, sl, tp, "AppleTrader GUI SELL");
    }
 
    if(trade.ResultRetcode() == TRADE_RETCODE_DONE)
