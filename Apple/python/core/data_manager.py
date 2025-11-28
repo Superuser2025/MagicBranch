@@ -201,6 +201,9 @@ class DataManager:
         # Last update timestamp
         self.last_update = None
 
+        # Store last raw data from EA for debugging
+        self.last_raw_data = {}
+
     def update_from_mt5_data(self, data: Dict):
         """
         Update all buffers from MT5 data (either from API or IPC file)
@@ -219,33 +222,41 @@ class DataManager:
                 else:
                     self.last_update = datetime.now()
 
-            # Update price
-            if 'price' in data:
-                self.current_price.update(data['price'])
+            # Update price (EA sends bid/ask directly, not nested)
+            if 'symbol' in data:
+                self.current_price['symbol'] = data['symbol']
+            if 'bid' in data:
+                self.current_price['bid'] = data['bid']
+            if 'ask' in data:
+                self.current_price['ask'] = data['ask']
+            if 'spread' in data:
+                self.current_price['spread'] = data['spread']
+            if 'timeframe' in data:
+                self.current_price['timeframe'] = data['timeframe']
 
-            # Update market state
-            if 'market_state' in data:
-                self.market_state.update(data['market_state'])
+            # Update market state (EA sends these directly, not nested)
+            if 'bias' in data:
+                self.market_state['bias'] = data['bias']
+            if 'regime' in data:
+                self.market_state['regime'] = data['regime']
+            if 'session' in data:
+                self.market_state['session'] = data['session']
+            if 'volatility' in data:
+                self.market_state['volatility'] = data['volatility']
 
-            # Update filter status
+            # Update filter status (EA sends filters as array of 20 bools)
             if 'filters' in data:
-                filters = data['filters']
-                # Handle both dict and list formats
-                if isinstance(filters, dict):
-                    self.filter_status.update(filters)
-                elif isinstance(filters, list):
-                    # EA sends array of 20 filter states - store as-is
-                    self.filter_status = filters
+                self.filter_status = data['filters']
 
-            # Update trade decision
-            if 'decision' in data:
-                self.trade_decision.update(data['decision'])
+            # Update trade decision fields
+            if 'passed_filters' in data:
+                self.trade_decision['confluence'] = data.get('passed_filters', 0)
+            if 'confluence' in data:
+                self.trade_decision['confluence'] = data['confluence']
 
-            # Update active pattern
-            if 'patterns' in data and 'active' in data['patterns']:
-                self.active_pattern = data['patterns']['active']
-                if self.active_pattern:
-                    self.pattern_buffer.add_pattern(self.active_pattern)
+            # Update active pattern (EA sends 'pattern' directly as string)
+            if 'pattern' in data:
+                self.active_pattern = data['pattern']
 
             # Update zones
             if 'zones' in data:
@@ -271,13 +282,28 @@ class DataManager:
                     self.positions = positions_data
                     self.position_count = len(positions_data)
 
-            # Update account
-            if 'account' in data:
-                self.account.update(data['account'])
+            # Update account (EA sends these directly, not nested)
+            if 'account_balance' in data:
+                self.account['balance'] = data['account_balance']
+            if 'account_equity' in data:
+                self.account['equity'] = data['account_equity']
+            if 'total_pnl' in data:
+                self.account['profit'] = data['total_pnl']
+            if 'today_pnl' in data:
+                self.account['daily_pnl'] = data['today_pnl']
 
-            # Update ML data
-            if 'ml' in data:
-                self.ml_data.update(data['ml'])
+            # Update ML data (EA sends these directly, not nested)
+            if 'ml_enabled' in data:
+                self.ml_data['enabled'] = data['ml_enabled']
+            if 'ml_signal' in data:
+                self.ml_data['signal'] = data['ml_signal']
+            if 'ml_probability' in data:
+                self.ml_data['probability'] = data['ml_probability']
+            if 'ml_confidence' in data:
+                self.ml_data['confidence'] = data['ml_confidence']
+
+            # Store raw EA data for debugging
+            self.last_raw_data = data
 
             logger.debug(f"Data manager updated at {self.last_update}")
 
