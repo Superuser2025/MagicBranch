@@ -299,7 +299,7 @@ class ControlsPanel(QWidget):
                 font-weight: 700;
             }}
             QPushButton:hover {{
-                background-color: {settings.theme.bullish_light};
+                background-color: {settings.theme.bullish};
                 transform: scale(1.02);
             }}
             QPushButton:pressed {{
@@ -322,7 +322,7 @@ class ControlsPanel(QWidget):
                 font-weight: 700;
             }}
             QPushButton:hover {{
-                background-color: {settings.theme.bearish_light};
+                background-color: {settings.theme.bearish};
                 transform: scale(1.02);
             }}
             QPushButton:pressed {{
