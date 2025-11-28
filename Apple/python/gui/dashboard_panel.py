@@ -512,8 +512,15 @@ class DashboardPanel(QWidget):
         }
         return bias_colors.get(bias, settings.theme.text_secondary)
 
-    def update_label_value(self, widget: QWidget, value: str, color: str):
+    def update_label_value(self, widget: QWidget, value, color: str):
         """Update label value and color"""
+
+        # Convert value to string if it's not already
+        if not isinstance(value, str):
+            if isinstance(value, float):
+                value = f"{value:.4f}"
+            else:
+                value = str(value)
 
         value_label = widget.findChild(QLabel, "value")
         if value_label:
