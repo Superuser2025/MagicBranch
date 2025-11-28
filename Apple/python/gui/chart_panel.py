@@ -8,8 +8,19 @@ from PyQt6.QtWidgets import (
     QPushButton, QFrame
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QPropertyAnimation, QEasingCurve
-from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtWebEngineCore import QWebEnginePage
+
+# Try to import WebEngine, fallback to simple widget if not available
+try:
+    from PyQt6.QtWebEngineWidgets import QWebEngineView
+    from PyQt6.QtWebEngineCore import QWebEnginePage
+    WEBENGINE_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠ Warning: PyQt6-WebEngine not available: {e}")
+    print("  Chart panel will use simplified view")
+    WEBENGINE_AVAILABLE = False
+    QWebEngineView = None
+    QWebEnginePage = None
+
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
@@ -67,13 +78,31 @@ class ChartPanel(QWidget):
         # ============================================================
         # CHART CONTAINER (Main)
         # ============================================================
-        self.chart_view = QWebEngineView()
-        self.chart_view.setStyleSheet("""
-            QWebEngineView {
-                background-color: #0A0E27;
-                border: none;
-            }
-        """)
+        if WEBENGINE_AVAILABLE:
+            self.chart_view = QWebEngineView()
+            self.chart_view.setStyleSheet("""
+                QWebEngineView {
+                    background-color: #0A0E27;
+                    border: none;
+                }
+            """)
+        else:
+            # Fallback: Simple label when WebEngine not available
+            self.chart_view = QLabel("📊 Chart View (WebEngine not available)\n\n"
+                                      "Market data is being received from MT5 successfully.\n"
+                                      "All other panels are fully functional.\n\n"
+                                      "To enable charts, install Visual C++ Redistributable:\n"
+                                      "https://aka.ms/vs/17/release/vc_redist.x64.exe")
+            self.chart_view.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.chart_view.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {settings.theme.surface};
+                    color: {settings.theme.text_secondary};
+                    border: none;
+                    font-size: {settings.theme.font_size_md}px;
+                    padding: 40px;
+                }}
+            """)
 
         layout.addWidget(self.chart_view)
 
@@ -217,6 +246,9 @@ class ChartPanel(QWidget):
 
     def init_chart(self):
         """Initialize empty chart"""
+
+        if not WEBENGINE_AVAILABLE:
+            return  # Skip chart initialization if WebEngine not available
 
         # Create initial chart with placeholder data
         fig = self.create_empty_chart()
@@ -427,6 +459,9 @@ class ChartPanel(QWidget):
 
     def update_chart(self):
         """Update chart with latest data"""
+
+        if not WEBENGINE_AVAILABLE:
+            return  # Skip chart updates if WebEngine not available
 
         try:
             # Get latest candles from data manager
