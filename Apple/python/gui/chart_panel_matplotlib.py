@@ -249,8 +249,12 @@ class ChartPanel(QWidget):
                 pad=10
             )
 
-        # Adjust layout
-        self.canvas.fig.tight_layout()
+        # Adjust layout with proper margins
+        try:
+            self.canvas.fig.subplots_adjust(left=0.08, right=0.98, top=0.95, bottom=0.08)
+        except:
+            pass  # Ignore layout warnings
+
         self.canvas.draw()
 
     def update_chart(self):
