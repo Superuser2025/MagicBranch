@@ -167,40 +167,55 @@ class ChartPanel(QWidget):
         return toolbar
 
     def init_chart(self):
-        """Initialize chart with sample data"""
+        """Initialize chart with live MT5 data"""
 
-        # Generate sample candlestick data
-        self.generate_sample_data()
+        # Initialize with current MT5 price
+        self.candle_data = []
+        self.get_live_mt5_data()
         self.plot_candlesticks()
 
-    def generate_sample_data(self):
-        """Generate sample candlestick data for demonstration"""
+    def get_live_mt5_data(self):
+        """Get live price from MT5 data manager"""
 
-        np.random.seed(42)
-        num_candles = 50
+        try:
+            # Get current price from data manager
+            price_data = data_manager.get_latest_price()
 
-        # Generate realistic price movement
-        base_price = 1.32000
-        prices = [base_price]
+            bid = price_data.get('bid', 1.32000)
+            ask = price_data.get('ask', 1.32020)
+            mid_price = (bid + ask) / 2
 
-        for _ in range(num_candles - 1):
-            change = np.random.randn() * 0.0005
-            prices.append(prices[-1] + change)
+            # Create a simple candle from current price
+            if len(self.candle_data) == 0:
+                # First candle - use current price
+                new_candle = {
+                    'time': 0,
+                    'open': mid_price,
+                    'high': ask,
+                    'low': bid,
+                    'close': mid_price
+                }
+            else:
+                # Add new candle
+                new_candle = {
+                    'time': len(self.candle_data),
+                    'open': self.candle_data[-1]['close'],
+                    'high': ask,
+                    'low': bid,
+                    'close': mid_price
+                }
 
-        # Create OHLC data
-        self.candle_data = []
-        for i, close_price in enumerate(prices):
-            high = close_price + abs(np.random.randn() * 0.0003)
-            low = close_price - abs(np.random.randn() * 0.0003)
-            open_price = low + np.random.random() * (high - low)
+            self.candle_data.append(new_candle)
 
-            self.candle_data.append({
-                'time': i,
-                'open': open_price,
-                'high': high,
-                'low': low,
-                'close': close_price
-            })
+            # Keep only last 50 candles
+            if len(self.candle_data) > 50:
+                self.candle_data.pop(0)
+                # Adjust time indices
+                for i, c in enumerate(self.candle_data):
+                    c['time'] = i
+
+        except Exception as e:
+            logger.warning(f"Could not get MT5 data, using defaults: {e}")
 
     def plot_candlesticks(self):
         """Plot candlestick chart"""
@@ -261,31 +276,10 @@ class ChartPanel(QWidget):
         """Update chart with latest data"""
 
         try:
-            # In a real implementation, get data from data_manager
-            # For now, just update the sample data
+            # Get live MT5 data
+            self.get_live_mt5_data()
+
             if self.candle_data:
-                # Simulate new candle
-                last_close = self.candle_data[-1]['close']
-                change = np.random.randn() * 0.0005
-                new_close = last_close + change
-
-                new_candle = {
-                    'time': len(self.candle_data),
-                    'open': last_close,
-                    'high': new_close + abs(np.random.randn() * 0.0003),
-                    'low': new_close - abs(np.random.randn() * 0.0003),
-                    'close': new_close
-                }
-
-                self.candle_data.append(new_candle)
-
-                # Keep only last 50 candles
-                if len(self.candle_data) > 50:
-                    self.candle_data.pop(0)
-                    # Adjust time indices
-                    for i, c in enumerate(self.candle_data):
-                        c['time'] = i
-
                 self.plot_candlesticks()
                 self.status_label.setText(f"Updated: {datetime.now().strftime('%H:%M:%S')}")
                 self.status_label.setStyleSheet(f"""
@@ -313,8 +307,9 @@ class ChartPanel(QWidget):
         self.current_timeframe = timeframe
         self.timeframe_changed.emit(timeframe)
 
-        # Regenerate data for new timeframe
-        self.generate_sample_data()
+        # Clear and reload with live data for new timeframe
+        self.candle_data = []
+        self.get_live_mt5_data()
         self.plot_candlesticks()
 
         logger.info(f"Timeframe changed to: {timeframe}")
