@@ -18,6 +18,7 @@ from matplotlib.patches import Rectangle
 import numpy as np
 import pandas as pd
 from datetime import datetime
+import MetaTrader5 as mt5
 
 from config import settings, TIMEFRAMES
 from core.data_manager import data_manager
@@ -53,6 +54,10 @@ class ChartPanel(QWidget):
 
         # Sample data for demonstration
         self.candle_data = []
+
+        # MT5 connection status
+        self.mt5_initialized = False
+        self.init_mt5_connection()
 
         self.init_ui()
 
@@ -166,12 +171,92 @@ class ChartPanel(QWidget):
 
         return toolbar
 
-    def init_chart(self):
-        """Initialize chart with live MT5 data"""
+    def init_mt5_connection(self):
+        """Initialize connection to MetaTrader5"""
+        try:
+            if not mt5.initialize():
+                logger.error("MT5 initialize() failed")
+                self.mt5_initialized = False
+                return
 
-        # Initialize with current MT5 price
-        self.candle_data = []
-        self.get_live_mt5_data()
+            self.mt5_initialized = True
+            logger.info(f"✓ MT5 connection established: {mt5.terminal_info()}")
+
+        except Exception as e:
+            logger.error(f"Failed to initialize MT5: {e}")
+            self.mt5_initialized = False
+
+    def get_mt5_timeframe(self, timeframe_str: str):
+        """Convert timeframe string to MT5 constant"""
+        timeframe_map = {
+            'M1': mt5.TIMEFRAME_M1,
+            'M5': mt5.TIMEFRAME_M5,
+            'M15': mt5.TIMEFRAME_M15,
+            'M30': mt5.TIMEFRAME_M30,
+            'H1': mt5.TIMEFRAME_H1,
+            'H4': mt5.TIMEFRAME_H4,
+            'D1': mt5.TIMEFRAME_D1,
+            'W1': mt5.TIMEFRAME_W1,
+        }
+        return timeframe_map.get(timeframe_str, mt5.TIMEFRAME_M5)
+
+    def load_historical_data(self, symbol: str = None, timeframe: str = None, count: int = 100):
+        """Load historical candles from MT5"""
+        if not self.mt5_initialized:
+            logger.warning("MT5 not initialized, cannot load historical data")
+            return False
+
+        try:
+            symbol = symbol or self.current_symbol
+            timeframe = timeframe or self.current_timeframe
+            mt5_timeframe = self.get_mt5_timeframe(timeframe)
+
+            # Get historical rates from MT5
+            rates = mt5.copy_rates_from_pos(symbol, mt5_timeframe, 0, count)
+
+            if rates is None or len(rates) == 0:
+                logger.warning(f"No historical data received from MT5 for {symbol} {timeframe}")
+                return False
+
+            # Convert to our candle format
+            self.candle_data = []
+            for i, rate in enumerate(rates):
+                candle = {
+                    'time': i,
+                    'open': rate['open'],
+                    'high': rate['high'],
+                    'low': rate['low'],
+                    'close': rate['close'],
+                    'timestamp': rate['time']
+                }
+                self.candle_data.append(candle)
+
+            logger.info(f"✓ Loaded {len(self.candle_data)} historical candles for {symbol} {timeframe}")
+            return True
+
+        except Exception as e:
+            logger.exception(f"Error loading historical data: {e}")
+            return False
+
+    def init_chart(self):
+        """Initialize chart with historical and live MT5 data"""
+
+        # First, try to load historical data from MT5
+        if self.mt5_initialized:
+            success = self.load_historical_data()
+            if success:
+                logger.info(f"Chart initialized with {len(self.candle_data)} historical candles")
+            else:
+                # Fallback to live data if historical load fails
+                logger.info("Historical data load failed, using live data only")
+                self.candle_data = []
+                self.get_live_mt5_data()
+        else:
+            # MT5 not available, use live data from JSON
+            logger.info("MT5 not initialized, using live data from JSON")
+            self.candle_data = []
+            self.get_live_mt5_data()
+
         self.plot_candlesticks()
 
     def get_live_mt5_data(self):
@@ -307,9 +392,18 @@ class ChartPanel(QWidget):
         self.current_timeframe = timeframe
         self.timeframe_changed.emit(timeframe)
 
-        # Clear and reload with live data for new timeframe
-        self.candle_data = []
-        self.get_live_mt5_data()
+        # Reload historical data for new timeframe
+        if self.mt5_initialized:
+            success = self.load_historical_data(timeframe=timeframe)
+            if not success:
+                # Fallback to live data if historical load fails
+                self.candle_data = []
+                self.get_live_mt5_data()
+        else:
+            # MT5 not available, use live data
+            self.candle_data = []
+            self.get_live_mt5_data()
+
         self.plot_candlesticks()
 
         logger.info(f"Timeframe changed to: {timeframe}")
