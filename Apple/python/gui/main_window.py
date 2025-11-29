@@ -16,7 +16,7 @@ from core.mt5_connector import connector
 from core.data_manager import data_manager
 
 # Import panels
-from gui.chart_panel import ChartPanel
+from gui.chart_panel_matplotlib import ChartPanel
 from gui.dashboard_panel import DashboardPanel
 from gui.controls_panel import ControlsPanel
 from gui.commentary_panel import CommentaryPanel
