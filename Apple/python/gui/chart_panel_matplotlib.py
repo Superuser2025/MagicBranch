@@ -55,6 +55,9 @@ class ChartPanel(QWidget):
         # Sample data for demonstration
         self.candle_data = []
 
+        # Loading flag to prevent updates during data reload
+        self.is_loading = False
+
         # MT5 connection status
         self.mt5_initialized = False
         self.init_mt5_connection()
@@ -349,24 +352,25 @@ class ChartPanel(QWidget):
         if not self.candle_data:
             return
 
-        # Extract data
-        times = [c['time'] for c in self.candle_data]
+        # Extract data (use indices for plotting positions)
+        indices = list(range(len(self.candle_data)))
         opens = [c['open'] for c in self.candle_data]
         highs = [c['high'] for c in self.candle_data]
         lows = [c['low'] for c in self.candle_data]
         closes = [c['close'] for c in self.candle_data]
+        timestamps = [c.get('timestamp', 0) for c in self.candle_data]
 
         # Plot candlesticks
-        for i, (t, o, h, l, c) in enumerate(zip(times, opens, highs, lows, closes)):
+        for i, (idx, o, h, l, c) in enumerate(zip(indices, opens, highs, lows, closes)):
             color = '#10B981' if c >= o else '#EF4444'  # Green if bullish, red if bearish
 
             # Draw wick
-            self.canvas.axes.plot([t, t], [l, h], color=color, linewidth=1)
+            self.canvas.axes.plot([idx, idx], [l, h], color=color, linewidth=1)
 
             # Draw body
             body_height = abs(c - o)
             body_bottom = min(o, c)
-            rect = Rectangle((t - 0.3, body_bottom), 0.6, body_height,
+            rect = Rectangle((idx - 0.3, body_bottom), 0.6, body_height,
                            facecolor=color, edgecolor=color)
             self.canvas.axes.add_patch(rect)
 
@@ -376,6 +380,31 @@ class ChartPanel(QWidget):
         self.canvas.axes.set_xlabel('Time', color='#94A3B8', fontsize=10)
         self.canvas.axes.set_ylabel('Price', color='#94A3B8', fontsize=10)
         self.canvas.axes.tick_params(colors='#94A3B8', labelsize=9)
+
+        # Set X-axis to show actual times instead of candle numbers
+        if timestamps and timestamps[0] > 0:
+            # Show time labels at regular intervals
+            num_labels = min(8, len(indices))  # Show max 8 time labels
+            step = max(1, len(indices) // num_labels)
+
+            tick_positions = indices[::step]
+            tick_labels = []
+
+            for i in tick_positions:
+                if i < len(timestamps):
+                    ts = timestamps[i]
+                    # Format timestamp as readable time
+                    dt = datetime.fromtimestamp(ts)
+                    # For intraday: show time (HH:MM)
+                    # For daily: show date (MM/DD)
+                    if self.current_timeframe in ['M1', 'M5', 'M15', 'M30', 'H1', 'H4']:
+                        label = dt.strftime('%H:%M')
+                    else:
+                        label = dt.strftime('%m/%d')
+                    tick_labels.append(label)
+
+            self.canvas.axes.set_xticks(tick_positions)
+            self.canvas.axes.set_xticklabels(tick_labels, rotation=0, ha='center')
 
         # Set title
         if self.candle_data:
@@ -427,6 +456,10 @@ class ChartPanel(QWidget):
         """Update chart with latest price (only updates last candle, no reload)"""
 
         try:
+            # Skip update if we're currently loading new data (symbol/timeframe change)
+            if self.is_loading:
+                return
+
             # Update only the last candle with current price
             # DO NOT reload all 100 candles - that causes the "morphing" issue!
             self.update_last_candle_only()
@@ -456,6 +489,9 @@ class ChartPanel(QWidget):
     def on_timeframe_changed(self, timeframe: str):
         """Handle timeframe change"""
 
+        # Set loading flag to prevent update_chart from interfering
+        self.is_loading = True
+
         self.current_timeframe = timeframe
         self.timeframe_changed.emit(timeframe)
 
@@ -473,10 +509,16 @@ class ChartPanel(QWidget):
 
         self.plot_candlesticks()
 
+        # Clear loading flag - updates can resume
+        self.is_loading = False
+
         logger.info(f"Timeframe changed to: {timeframe}")
 
     def on_symbol_changed(self, symbol: str):
         """Handle symbol change - allows viewing any symbol independent of EA"""
+
+        # Set loading flag to prevent update_chart from interfering
+        self.is_loading = True
 
         self.current_symbol = symbol
 
@@ -493,5 +535,8 @@ class ChartPanel(QWidget):
             self.get_live_mt5_data()
 
         self.plot_candlesticks()
+
+        # Clear loading flag - updates can resume
+        self.is_loading = False
 
         logger.info(f"Symbol changed to: {symbol}")
