@@ -209,10 +209,10 @@ class ChartPanel(QWidget):
         try:
             # Try to get symbol from data_manager (what EA is actually trading)
             if symbol is None:
-                market_state = data_manager.get_market_state()
-                symbol = market_state.get('symbol', self.current_symbol)
+                price_data = data_manager.get_latest_price()
+                symbol = price_data.get('symbol', self.current_symbol)
                 # Update current_symbol to match what EA is trading
-                if symbol != self.current_symbol:
+                if symbol and symbol != self.current_symbol:
                     self.current_symbol = symbol
                     logger.info(f"Symbol updated to match EA: {symbol}")
 
@@ -365,41 +365,51 @@ class ChartPanel(QWidget):
 
         self.canvas.draw()
 
-    def update_chart(self):
-        """Update chart with latest data"""
+    def update_last_candle_only(self):
+        """Update only the last (forming) candle with current price"""
+        if not self.candle_data:
+            return
 
         try:
-            # If MT5 is connected, reload fresh historical data
-            # This prevents infinite candle appending and keeps chart clean
-            if self.mt5_initialized:
-                success = self.load_historical_data()
-                if success:
-                    self.plot_candlesticks()
-                    self.status_label.setText(f"Updated: {datetime.now().strftime('%H:%M:%S')}")
-                    self.status_label.setStyleSheet(f"""
-                        QLabel {{
-                            color: {settings.theme.success};
-                            font-size: {settings.theme.font_size_sm}px;
-                            background: transparent;
-                        }}
-                    """)
-                    return
+            # Get current price from data_manager (EA's live data)
+            price_data = data_manager.get_latest_price()
+            bid = price_data.get('bid')
+            ask = price_data.get('ask')
 
-            # Fallback: Update only if we don't have historical data
-            # Don't append infinitely - keep max 50 candles
-            if len(self.candle_data) < 50:
-                self.get_live_mt5_data()
+            if bid is None or ask is None:
+                return
 
-                if self.candle_data:
-                    self.plot_candlesticks()
-                    self.status_label.setText(f"Updated: {datetime.now().strftime('%H:%M:%S')}")
-                    self.status_label.setStyleSheet(f"""
-                        QLabel {{
-                            color: {settings.theme.success};
-                            font-size: {settings.theme.font_size_sm}px;
-                            background: transparent;
-                        }}
-                    """)
+            mid_price = (bid + ask) / 2
+
+            # Update the last candle (the forming one)
+            last_candle = self.candle_data[-1]
+            last_candle['close'] = mid_price
+            last_candle['high'] = max(last_candle['high'], ask)
+            last_candle['low'] = min(last_candle['low'], bid)
+
+            # Note: We don't change 'open' - it stays as it was when candle started
+
+        except Exception as e:
+            logger.debug(f"Could not update last candle: {e}")
+
+    def update_chart(self):
+        """Update chart with latest price (only updates last candle, no reload)"""
+
+        try:
+            # Update only the last candle with current price
+            # DO NOT reload all 100 candles - that causes the "morphing" issue!
+            self.update_last_candle_only()
+
+            if self.candle_data:
+                self.plot_candlesticks()
+                self.status_label.setText(f"Updated: {datetime.now().strftime('%H:%M:%S')}")
+                self.status_label.setStyleSheet(f"""
+                    QLabel {{
+                        color: {settings.theme.success};
+                        font-size: {settings.theme.font_size_sm}px;
+                        background: transparent;
+                    }}
+                """)
 
         except Exception as e:
             logger.exception(f"Error updating chart: {e}")
