@@ -100,18 +100,47 @@ class ChartPanel(QWidget):
         layout = QHBoxLayout(toolbar)
         layout.setContentsMargins(16, 8, 16, 8)
 
-        # Symbol label
-        symbol_label = QLabel(f"📈 {self.current_symbol}")
-        symbol_label.setStyleSheet(f"""
+        # Symbol selector (allow user to view any symbol)
+        symbol_label_text = QLabel("Symbol:")
+        symbol_label_text.setStyleSheet(f"""
             QLabel {{
-                color: {settings.theme.text_primary};
-                font-size: {settings.theme.font_size_xl}px;
-                font-weight: 600;
+                color: {settings.theme.text_secondary};
+                font-size: {settings.theme.font_size_md}px;
                 background: transparent;
                 border: none;
             }}
         """)
-        layout.addWidget(symbol_label)
+        layout.addWidget(symbol_label_text)
+
+        # Symbol dropdown
+        self.symbol_combo = QComboBox()
+        self.symbol_combo.addItems(['GBPUSD', 'EURUSD', 'USDJPY', 'AUDUSD', 'USDCAD',
+                                     'NZDUSD', 'EURGBP', 'EURJPY', 'GBPJPY'])
+        self.symbol_combo.setCurrentText(self.current_symbol)
+        self.symbol_combo.currentTextChanged.connect(self.on_symbol_changed)
+        self.symbol_combo.setStyleSheet(f"""
+            QComboBox {{
+                background-color: {settings.theme.surface_light};
+                color: {settings.theme.text_primary};
+                border: 1px solid {settings.theme.border_color};
+                border-radius: 6px;
+                padding: 8px 12px;
+                min-width: 100px;
+                font-size: {settings.theme.font_size_md}px;
+                font-weight: 600;
+            }}
+            QComboBox:hover {{
+                border-color: {settings.theme.accent};
+            }}
+            QComboBox QAbstractItemView {{
+                background-color: {settings.theme.surface_light};
+                color: {settings.theme.text_primary};
+                selection-background-color: {settings.theme.accent};
+                border: 1px solid {settings.theme.border_color};
+                border-radius: 6px;
+            }}
+        """)
+        layout.addWidget(self.symbol_combo)
 
         layout.addSpacing(20)
 
@@ -214,6 +243,8 @@ class ChartPanel(QWidget):
                 # Update current_symbol to match what EA is trading
                 if symbol and symbol != self.current_symbol:
                     self.current_symbol = symbol
+                    # Also update the dropdown to match EA's symbol
+                    self.symbol_combo.setCurrentText(symbol)
                     logger.info(f"Symbol updated to match EA: {symbol}")
 
             timeframe = timeframe or self.current_timeframe
@@ -443,3 +474,24 @@ class ChartPanel(QWidget):
         self.plot_candlesticks()
 
         logger.info(f"Timeframe changed to: {timeframe}")
+
+    def on_symbol_changed(self, symbol: str):
+        """Handle symbol change - allows viewing any symbol independent of EA"""
+
+        self.current_symbol = symbol
+
+        # Reload historical data for new symbol
+        if self.mt5_initialized:
+            success = self.load_historical_data(symbol=symbol)
+            if not success:
+                # Fallback to live data if historical load fails
+                self.candle_data = []
+                self.get_live_mt5_data()
+        else:
+            # MT5 not available, use live data
+            self.candle_data = []
+            self.get_live_mt5_data()
+
+        self.plot_candlesticks()
+
+        logger.info(f"Symbol changed to: {symbol}")

@@ -79,7 +79,7 @@ class MainWindow(QMainWindow):
         # LEFT PANEL: Controls
         # ============================================================
         left_panel = QWidget()
-        left_panel.setFixedWidth(320)
+        left_panel.setFixedWidth(360)  # Increased from 320 to give more space for buttons
         left_layout = QVBoxLayout(left_panel)
         left_layout.setContentsMargins(0, 0, 0, 0)
 
