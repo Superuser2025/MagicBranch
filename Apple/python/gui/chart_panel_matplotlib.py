@@ -207,7 +207,15 @@ class ChartPanel(QWidget):
             return False
 
         try:
-            symbol = symbol or self.current_symbol
+            # Try to get symbol from data_manager (what EA is actually trading)
+            if symbol is None:
+                market_state = data_manager.get_market_state()
+                symbol = market_state.get('symbol', self.current_symbol)
+                # Update current_symbol to match what EA is trading
+                if symbol != self.current_symbol:
+                    self.current_symbol = symbol
+                    logger.info(f"Symbol updated to match EA: {symbol}")
+
             timeframe = timeframe or self.current_timeframe
             mt5_timeframe = self.get_mt5_timeframe(timeframe)
 
@@ -361,19 +369,37 @@ class ChartPanel(QWidget):
         """Update chart with latest data"""
 
         try:
-            # Get live MT5 data
-            self.get_live_mt5_data()
+            # If MT5 is connected, reload fresh historical data
+            # This prevents infinite candle appending and keeps chart clean
+            if self.mt5_initialized:
+                success = self.load_historical_data()
+                if success:
+                    self.plot_candlesticks()
+                    self.status_label.setText(f"Updated: {datetime.now().strftime('%H:%M:%S')}")
+                    self.status_label.setStyleSheet(f"""
+                        QLabel {{
+                            color: {settings.theme.success};
+                            font-size: {settings.theme.font_size_sm}px;
+                            background: transparent;
+                        }}
+                    """)
+                    return
 
-            if self.candle_data:
-                self.plot_candlesticks()
-                self.status_label.setText(f"Updated: {datetime.now().strftime('%H:%M:%S')}")
-                self.status_label.setStyleSheet(f"""
-                    QLabel {{
-                        color: {settings.theme.success};
-                        font-size: {settings.theme.font_size_sm}px;
-                        background: transparent;
-                    }}
-                """)
+            # Fallback: Update only if we don't have historical data
+            # Don't append infinitely - keep max 50 candles
+            if len(self.candle_data) < 50:
+                self.get_live_mt5_data()
+
+                if self.candle_data:
+                    self.plot_candlesticks()
+                    self.status_label.setText(f"Updated: {datetime.now().strftime('%H:%M:%S')}")
+                    self.status_label.setStyleSheet(f"""
+                        QLabel {{
+                            color: {settings.theme.success};
+                            font-size: {settings.theme.font_size_sm}px;
+                            background: transparent;
+                        }}
+                    """)
 
         except Exception as e:
             logger.exception(f"Error updating chart: {e}")
