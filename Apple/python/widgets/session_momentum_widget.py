@@ -133,6 +133,9 @@ class SessionMomentumWidget(QWidget):
         self.refresh_timer.timeout.connect(self.on_refresh_requested)
         self.refresh_timer.start(3000)
 
+        # Load sample data to show functionality
+        self.load_sample_data()
+
     def init_ui(self):
         """Initialize the user interface"""
         layout = QVBoxLayout(self)
@@ -385,6 +388,68 @@ class SessionMomentumWidget(QWidget):
         if current_item:
             return current_item.data(Qt.ItemDataRole.UserRole)
         return None
+
+    def load_sample_data(self):
+        """Load sample momentum data for demonstration"""
+        sample_data = [
+            {
+                'symbol': 'GBPUSD',
+                'momentum_score': 89.5,
+                'session_range_pips': 142,
+                'direction': 'BULLISH',
+                'trending_strength': 85,
+                'hourly_volatility': 0.0032,
+                'volume_ratio': 1.8,
+                'session': 'London',
+                'recommendation': 'BEST OPPORTUNITY'
+            },
+            {
+                'symbol': 'EURUSD',
+                'momentum_score': 76.2,
+                'session_range_pips': 98,
+                'direction': 'BULLISH',
+                'trending_strength': 72,
+                'hourly_volatility': 0.0028,
+                'volume_ratio': 1.5,
+                'session': 'London',
+                'recommendation': 'STRONG'
+            },
+            {
+                'symbol': 'USDJPY',
+                'momentum_score': 68.3,
+                'session_range_pips': 85,
+                'direction': 'BEARISH',
+                'trending_strength': 65,
+                'hourly_volatility': 0.0025,
+                'volume_ratio': 1.3,
+                'session': 'Tokyo',
+                'recommendation': 'GOOD'
+            },
+            {
+                'symbol': 'AUDUSD',
+                'momentum_score': 55.7,
+                'session_range_pips': 62,
+                'direction': 'BULLISH',
+                'trending_strength': 58,
+                'hourly_volatility': 0.0022,
+                'volume_ratio': 1.1,
+                'session': 'Sydney',
+                'recommendation': 'MODERATE'
+            },
+            {
+                'symbol': 'NZDUSD',
+                'momentum_score': 45.2,
+                'session_range_pips': 48,
+                'direction': 'BEARISH',
+                'trending_strength': 42,
+                'hourly_volatility': 0.0019,
+                'volume_ratio': 0.9,
+                'session': 'Sydney',
+                'recommendation': 'WEAK'
+            }
+        ]
+
+        self.update_momentum_data(sample_data)
 
 
 # Need to import at the end to avoid circular import

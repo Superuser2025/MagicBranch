@@ -35,6 +35,10 @@ class VolatilityPositionWidget(QWidget):
         self.current_data = None
         self.init_ui()
 
+        # Load sample market conditions and calculate
+        self.load_sample_conditions()
+        self.calculate_position()
+
     def init_ui(self):
         """Initialize the user interface"""
         layout = QVBoxLayout(self)
@@ -399,6 +403,17 @@ class VolatilityPositionWidget(QWidget):
             return '#ff0000'  # Red
         else:
             return '#ffaa00'  # Orange
+
+    def load_sample_conditions(self):
+        """Load sample market conditions for demonstration"""
+        # Set sample volatility and trend
+        self.volatility_label.setText("NORMAL")
+        self.volatility_label.setStyleSheet("color: #ffaa00;")  # Orange for normal
+        self.volatility_multiplier_label.setText("x1.0")
+
+        self.trend_label.setText("STRONG TRENDING")
+        self.trend_label.setStyleSheet("color: #00ff00;")  # Green for strong trend
+        self.trend_multiplier_label.setText("x1.3")
 
     def clear_display(self):
         """Clear all displays"""
