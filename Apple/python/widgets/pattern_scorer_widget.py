@@ -10,9 +10,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
-from config import settings
 from widgets.pattern_scorer import pattern_scorer, PatternScore
-from utils.logger import logger
 
 
 class PatternScorerWidget(QWidget):

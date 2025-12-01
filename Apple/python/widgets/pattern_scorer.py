@@ -6,7 +6,6 @@ Rates trading setups from 0-100 based on confluence factors
 from typing import Dict, List, Tuple
 from dataclasses import dataclass
 from datetime import datetime
-from utils.logger import logger
 
 
 @dataclass
@@ -56,8 +55,6 @@ class PatternQualityScorer:
             40: ("WEAK", 2, "⭐⭐ Caution"),
             0:  ("SKIP", 1, "⭐ Low Quality")
         }
-
-        logger.info("Pattern Quality Scorer initialized")
 
     def score_pattern(
         self,
@@ -345,8 +342,6 @@ class PatternQualityScorer:
             'rr': rr,
             'timestamp': datetime.now()
         })
-
-        logger.debug(f"Historical trade added: {pattern_type} - {rr:.2f}R")
 
 
 # Global scorer instance
