@@ -21,7 +21,7 @@ from widgets.news_impact_widget import NewsImpactWidget
 from widgets.risk_reward_widget import RiskRewardWidget
 from widgets.equity_curve_widget import EquityCurveWidget
 from widgets.trade_journal_widget import TradeJournalWidget
-from gui.chart_panel_matplotlib import ChartPanelMatplotlib
+from gui.chart_panel_matplotlib import ChartPanel
 from gui.controls_panel import ControlsPanel
 
 
@@ -137,7 +137,7 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
 
         # Chart
-        self.chart_panel = ChartPanelMatplotlib()
+        self.chart_panel = ChartPanel()
         layout.addWidget(self.chart_panel, 3)  # 75% height
 
         # Controls
