@@ -184,12 +184,21 @@ class SessionMomentumWidget(QWidget):
         best_title = QLabel("⭐ BEST OPPORTUNITY")
         best_title.setFont(QFont("Arial", 10, QFont.Weight.Bold))
         best_title.setStyleSheet("color: #00ff00; border: none;")
+        best_title.setToolTip("Currency pair with highest momentum score - strongest trend + volume + session alignment")
         best_layout.addWidget(best_title)
 
         self.best_opportunity_label = QLabel("Scanning...")
         self.best_opportunity_label.setFont(QFont("Courier", 11, QFont.Weight.Bold))
         self.best_opportunity_label.setStyleSheet("color: #ffffff; border: none;")
+        self.best_opportunity_label.setWordWrap(True)
         best_layout.addWidget(self.best_opportunity_label)
+
+        # Add explanation
+        explanation = QLabel("Highest momentum = Strong trend + High volume + Active session")
+        explanation.setFont(QFont("Arial", 8))
+        explanation.setStyleSheet("color: #88ff88; border: none; font-style: italic;")
+        explanation.setWordWrap(True)
+        best_layout.addWidget(explanation)
 
         layout.addWidget(self.best_opportunity_frame)
 
