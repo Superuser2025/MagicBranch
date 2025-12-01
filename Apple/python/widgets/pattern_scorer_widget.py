@@ -13,6 +13,31 @@ from PyQt6.QtGui import QFont
 from widgets.pattern_scorer import pattern_scorer, PatternScore
 
 
+# Simple theme and settings (inline replacement for config module)
+class SimpleTheme:
+    background = '#0A0E27'
+    surface = '#1E293B'
+    surface_light = '#334155'
+    text_primary = '#F8FAFC'
+    text_secondary = '#94A3B8'
+    accent = '#3B82F6'
+    success = '#10B981'
+    danger = '#EF4444'
+    warning = '#F59E0B'
+    bullish = '#10B981'
+    bearish = '#EF4444'
+    border_color = '#334155'
+    font_size_sm = 12
+    font_size_md = 14
+    font_size_lg = 16
+    font_size_xl = 18
+
+class SimpleSettings:
+    theme = SimpleTheme()
+
+settings = SimpleSettings()
+
+
 class PatternScorerWidget(QWidget):
     """
     Visual display widget for pattern quality scores
@@ -31,8 +56,6 @@ class PatternScorerWidget(QWidget):
         self.current_score: PatternScore = None
 
         self.init_ui()
-
-        logger.info("Pattern Scorer Widget initialized")
 
     def init_ui(self):
         """Initialize user interface"""
