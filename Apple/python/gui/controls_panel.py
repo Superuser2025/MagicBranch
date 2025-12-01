@@ -11,9 +11,57 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal, QPropertyAnimation, QEasingCurve
 from PyQt6.QtGui import QFont
 
-from config import settings, UpdateSpeed, UPDATE_SPEED_CONFIGS
-from utils.logger import logger
 from core.command_manager import command_manager
+
+
+# Simple theme and settings (inline replacement for config module)
+class SimpleTheme:
+    background = '#0A0E27'
+    surface = '#1E293B'
+    surface_light = '#334155'
+    text_primary = '#F8FAFC'
+    text_secondary = '#94A3B8'
+    accent = '#3B82F6'
+    success = '#10B981'
+    danger = '#EF4444'
+    warning = '#F59E0B'
+    bullish = '#10B981'
+    bearish = '#EF4444'
+    border_color = '#334155'
+    border_color_light = '#475569'
+    font_size_sm = 12
+    font_size_md = 14
+    font_size_lg = 16
+    font_size_xl = 18
+
+class SimpleTradingSettings:
+    default_risk_percent = 1.0
+    use_ml_filter = True
+
+class SimpleAppSettings:
+    update_speed_preset = None
+
+class SimpleSettings:
+    theme = SimpleTheme()
+    trading = SimpleTradingSettings()
+    app = SimpleAppSettings()
+
+settings = SimpleSettings()
+
+# Simple UpdateSpeed enum replacement
+class UpdateSpeed:
+    SLOW = "SLOW"
+    NORMAL = "NORMAL"
+    FAST = "FAST"
+    REALTIME = "REALTIME"
+    CUSTOM = "CUSTOM"
+
+UPDATE_SPEED_CONFIGS = {
+    "SLOW": {"description": "Slow (5s updates)"},
+    "NORMAL": {"description": "Normal (2s updates)"},
+    "FAST": {"description": "Fast (1s updates)"},
+    "REALTIME": {"description": "Real-time (500ms)"},
+}
 
 
 class ControlsPanel(QWidget):
@@ -37,8 +85,6 @@ class ControlsPanel(QWidget):
         super().__init__()
 
         self.init_ui()
-
-        logger.info("Controls panel initialized")
 
     def init_ui(self):
         """Initialize user interface"""
@@ -218,15 +264,9 @@ class ControlsPanel(QWidget):
 
         # Speed selector
         self.speed_combo = QComboBox()
-        for speed in UpdateSpeed:
-            if speed != UpdateSpeed.CUSTOM:
-                config = UPDATE_SPEED_CONFIGS[speed]
-                self.speed_combo.addItem(config['description'], speed)
-
-        # Set current speed
-        current_index = list(UpdateSpeed).index(settings.app.update_speed_preset)
-        if current_index < self.speed_combo.count():
-            self.speed_combo.setCurrentIndex(current_index)
+        for speed_name in ['SLOW', 'NORMAL', 'FAST', 'REALTIME']:
+            config = UPDATE_SPEED_CONFIGS[speed_name]
+            self.speed_combo.addItem(config['description'], speed_name)
 
         self.speed_combo.currentIndexChanged.connect(self.on_speed_changed)
         self.speed_combo.setStyleSheet(f"""
@@ -668,7 +708,6 @@ class ControlsPanel(QWidget):
                 QPushButton:hover {{
                 }}
             """)
-            logger.info("Trading mode: AUTO TRADING enabled")
         else:
             self.mode_button.setText("🔴 INDICATOR MODE")
             self.mode_button.setStyleSheet(f"""
@@ -683,7 +722,6 @@ class ControlsPanel(QWidget):
                 QPushButton:hover {{
                 }}
             """)
-            logger.info("Trading mode: INDICATOR MODE (safe)")
 
         # Send command to EA
         command_manager.send_trading_mode(is_trading)
@@ -695,8 +733,6 @@ class ControlsPanel(QWidget):
 
         speed = self.speed_combo.itemData(index)
         if speed:
-            settings.app.set_update_speed(speed)
-            logger.info(f"Update speed changed to: {speed.value}")
             self.setting_changed.emit('update_speed', speed)
 
     def on_risk_changed(self, value: int):
@@ -719,8 +755,6 @@ class ControlsPanel(QWidget):
             filter_name: EA filter variable name (e.g., 'UseVolumeFilter')
             enabled: True to enable, False to disable
         """
-        logger.info(f"Filter toggled: {filter_name} = {'ON' if enabled else 'OFF'}")
-
         # Send command to EA via JSON
         command_manager.send_filter_toggle(filter_name, enabled)
 

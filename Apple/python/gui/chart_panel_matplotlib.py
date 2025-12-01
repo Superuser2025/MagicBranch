@@ -20,9 +20,38 @@ import pandas as pd
 from datetime import datetime
 import MetaTrader5 as mt5
 
-from config import settings, TIMEFRAMES
 from core.data_manager import data_manager
-from utils.logger import logger
+
+
+# Simple theme and settings (inline replacement for config module)
+class SimpleTheme:
+    background = '#0A0E27'
+    surface = '#1E293B'
+    surface_light = '#334155'
+    text_primary = '#F8FAFC'
+    text_secondary = '#94A3B8'
+    accent = '#3B82F6'
+    success = '#10B981'
+    danger = '#EF4444'
+    warning = '#F59E0B'
+    bullish = '#10B981'
+    bearish = '#EF4444'
+    border_color = '#334155'
+    font_size_sm = 12
+    font_size_md = 14
+    font_size_lg = 16
+    font_size_xl = 18
+
+class SimpleAppSettings:
+    default_symbol = 'EURUSD'
+    default_timeframe = 'H4'
+    chart_refresh_interval = 1000  # ms
+
+class SimpleSettings:
+    theme = SimpleTheme()
+    app = SimpleAppSettings()
+
+settings = SimpleSettings()
 
 
 class MplCanvas(FigureCanvasQTAgg):
@@ -207,15 +236,12 @@ class ChartPanel(QWidget):
         """Initialize connection to MetaTrader5"""
         try:
             if not mt5.initialize():
-                logger.error("MT5 initialize() failed")
                 self.mt5_initialized = False
                 return
 
             self.mt5_initialized = True
-            logger.info(f"✓ MT5 connection established: {mt5.terminal_info()}")
 
         except Exception as e:
-            logger.error(f"Failed to initialize MT5: {e}")
             self.mt5_initialized = False
 
     def get_mt5_timeframe(self, timeframe_str: str):
@@ -235,7 +261,6 @@ class ChartPanel(QWidget):
     def load_historical_data(self, symbol: str = None, timeframe: str = None, count: int = 100):
         """Load historical candles from MT5"""
         if not self.mt5_initialized:
-            logger.warning("MT5 not initialized, cannot load historical data")
             return False
 
         try:
@@ -248,7 +273,6 @@ class ChartPanel(QWidget):
                     self.current_symbol = symbol
                     # Also update the dropdown to match EA's symbol
                     self.symbol_combo.setCurrentText(symbol)
-                    logger.info(f"Symbol updated to match EA: {symbol}")
 
             timeframe = timeframe or self.current_timeframe
             mt5_timeframe = self.get_mt5_timeframe(timeframe)
@@ -257,7 +281,6 @@ class ChartPanel(QWidget):
             rates = mt5.copy_rates_from_pos(symbol, mt5_timeframe, 0, count)
 
             if rates is None or len(rates) == 0:
-                logger.warning(f"No historical data received from MT5 for {symbol} {timeframe}")
                 return False
 
             # Convert to our candle format
@@ -273,11 +296,9 @@ class ChartPanel(QWidget):
                 }
                 self.candle_data.append(candle)
 
-            logger.info(f"✓ Loaded {len(self.candle_data)} historical candles for {symbol} {timeframe}")
             return True
 
         except Exception as e:
-            logger.exception(f"Error loading historical data: {e}")
             return False
 
     def init_chart(self):
@@ -286,16 +307,12 @@ class ChartPanel(QWidget):
         # First, try to load historical data from MT5
         if self.mt5_initialized:
             success = self.load_historical_data()
-            if success:
-                logger.info(f"Chart initialized with {len(self.candle_data)} historical candles")
-            else:
+            if not success:
                 # Fallback to live data if historical load fails
-                logger.info("Historical data load failed, using live data only")
                 self.candle_data = []
                 self.get_live_mt5_data()
         else:
             # MT5 not available, use live data from JSON
-            logger.info("MT5 not initialized, using live data from JSON")
             self.candle_data = []
             self.get_live_mt5_data()
 
@@ -342,7 +359,7 @@ class ChartPanel(QWidget):
                     c['time'] = i
 
         except Exception as e:
-            logger.warning(f"Could not get MT5 data, using defaults: {e}")
+            pass
 
     def plot_candlesticks(self):
         """Plot candlestick chart"""
@@ -453,7 +470,7 @@ class ChartPanel(QWidget):
             # Note: We don't change 'open' - it stays as it was when candle started
 
         except Exception as e:
-            logger.debug(f"Could not update last candle: {e}")
+            pass
 
     def draw_chart_overlays(self):
         """Draw FVG/OB/Liquidity zones on chart from REAL EA data"""
@@ -486,7 +503,7 @@ class ChartPanel(QWidget):
                 self.draw_sample_liquidity()
 
         except Exception as e:
-            logger.debug(f"Could not draw overlays: {e}")
+            pass
 
     def draw_fvg_zones(self, fvgs: list):
         """Draw actual FVG zones from EA data"""
@@ -768,7 +785,6 @@ class ChartPanel(QWidget):
                 """)
 
         except Exception as e:
-            logger.exception(f"Error updating chart: {e}")
             self.status_label.setText("Update Error")
             self.status_label.setStyleSheet(f"""
                 QLabel {{
@@ -804,8 +820,6 @@ class ChartPanel(QWidget):
         # Clear loading flag - updates can resume
         self.is_loading = False
 
-        logger.info(f"Timeframe changed to: {timeframe}")
-
     def on_symbol_changed(self, symbol: str):
         """Handle symbol change - allows viewing any symbol independent of EA"""
 
@@ -830,5 +844,3 @@ class ChartPanel(QWidget):
 
         # Clear loading flag - updates can resume
         self.is_loading = False
-
-        logger.info(f"Symbol changed to: {symbol}")
