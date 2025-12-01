@@ -37,6 +37,9 @@ class CorrelationHeatmapWidget(QWidget):
         self.refresh_timer.timeout.connect(self.on_refresh_requested)
         self.refresh_timer.start(5000)
 
+        # Load sample correlation data
+        self.load_sample_data()
+
     def init_ui(self):
         """Initialize the user interface"""
         layout = QVBoxLayout(self)
@@ -366,3 +369,59 @@ class CorrelationHeatmapWidget(QWidget):
     def get_correlated_pairs(self, symbol: str, threshold: float = 0.7) -> List:
         """Get pairs correlated with given symbol"""
         return correlation_analyzer.get_correlated_pairs(symbol, threshold)
+
+    def load_sample_data(self):
+        """Load sample correlation data for demonstration"""
+        import numpy as np
+
+        symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCHF', 'USDCAD']
+
+        # Create sample correlation matrix
+        corr_matrix = pd.DataFrame(
+            [
+                [1.00, 0.85, -0.72, 0.68, -0.91, -0.65],  # EURUSD
+                [0.85, 1.00, -0.68, 0.72, -0.88, -0.61],  # GBPUSD
+                [-0.72, -0.68, 1.00, -0.45, 0.74, 0.58],  # USDJPY
+                [0.68, 0.72, -0.45, 1.00, -0.71, -0.55],  # AUDUSD
+                [-0.91, -0.88, 0.74, -0.71, 1.00, 0.68],  # USDCHF
+                [-0.65, -0.61, 0.58, -0.55, 0.68, 1.00],  # USDCAD
+            ],
+            index=symbols,
+            columns=symbols
+        )
+
+        # Create sample divergence alerts
+        divergences = [
+            {
+                'pair1': 'EURUSD',
+                'pair2': 'GBPUSD',
+                'current_corr': 0.85,
+                'avg_corr': 0.92,
+                'divergence_score': 8.2,
+                'type': 'BREAKDOWN'
+            },
+            {
+                'pair1': 'USDJPY',
+                'pair2': 'USDCHF',
+                'current_corr': 0.74,
+                'avg_corr': 0.68,
+                'divergence_score': 6.5,
+                'type': 'STRENGTHENING'
+            }
+        ]
+
+        # Create report structure
+        report = {
+            'correlation_matrix': corr_matrix,
+            'divergences': divergences,
+            'strongest_positive': [
+                ('EURUSD', 'USDCHF', -0.91),
+                ('EURUSD', 'GBPUSD', 0.85)
+            ],
+            'strongest_negative': [
+                ('EURUSD', 'USDJPY', -0.72),
+                ('GBPUSD', 'USDJPY', -0.68)
+            ]
+        }
+
+        self.update_correlation_data(report)

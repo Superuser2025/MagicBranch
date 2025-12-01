@@ -36,6 +36,9 @@ class MTFStructureWidget(QWidget):
         self.refresh_timer.timeout.connect(self.on_refresh_requested)
         self.refresh_timer.start(5000)
 
+        # Load sample structure data
+        self.load_sample_data()
+
     def init_ui(self):
         """Initialize the user interface"""
         layout = QVBoxLayout(self)
@@ -284,3 +287,52 @@ class MTFStructureWidget(QWidget):
         self.nearest_resistance_label.setText("Resistance: --")
         self.confluence_text.setPlainText("No data")
         self.status_label.setText("Status: Waiting for data")
+
+    def load_sample_data(self):
+        """Load sample structure data for demonstration"""
+        sample_structure = {
+            'trends': {
+                'W1': 'BULLISH',
+                'D1': 'BULLISH',
+                'H4': 'BULLISH',
+                'H1': 'RANGING',
+                'M15': 'BEARISH'
+            },
+            'current_price': 1.16080,
+            'nearest_support': {
+                'price': 1.15850,
+                'timeframe': 'H4',
+                'strength': 850
+            },
+            'nearest_resistance': {
+                'price': 1.16320,
+                'timeframe': 'D1',
+                'strength': 920
+            },
+            'confluence_zones': [
+                {
+                    'price': 1.15850,
+                    'type': 'SUPPORT',
+                    'timeframes': ['H4', 'D1'],
+                    'strength': 850,
+                    'distance_pips': 23.0
+                },
+                {
+                    'price': 1.16320,
+                    'type': 'RESISTANCE',
+                    'timeframes': ['D1', 'W1'],
+                    'strength': 920,
+                    'distance_pips': 24.0
+                },
+                {
+                    'price': 1.15500,
+                    'type': 'SUPPORT',
+                    'timeframes': ['W1', 'D1', 'H4'],
+                    'strength': 950,
+                    'distance_pips': 58.0
+                }
+            ],
+            'last_update': datetime.now()
+        }
+
+        self.update_structure_data(sample_structure)
