@@ -327,6 +327,11 @@ class ChartPanel(QWidget):
 
             bid = price_data.get('bid', 1.32000)
             ask = price_data.get('ask', 1.32020)
+
+            # Validate prices - must be positive
+            if bid <= 0 or ask <= 0:
+                return
+
             mid_price = (bid + ask) / 2
 
             # Create a simple candle from current price
@@ -456,7 +461,8 @@ class ChartPanel(QWidget):
             bid = price_data.get('bid')
             ask = price_data.get('ask')
 
-            if bid is None or ask is None:
+            # Validate: bid and ask must exist and be positive non-zero values
+            if bid is None or ask is None or bid <= 0 or ask <= 0:
                 return
 
             mid_price = (bid + ask) / 2
