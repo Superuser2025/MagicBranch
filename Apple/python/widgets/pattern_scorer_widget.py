@@ -27,6 +27,7 @@ class SimpleTheme:
     bullish = '#10B981'
     bearish = '#EF4444'
     border_color = '#334155'
+    font_size_xs = 10
     font_size_sm = 12
     font_size_md = 14
     font_size_lg = 16
