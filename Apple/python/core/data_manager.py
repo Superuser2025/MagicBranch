@@ -8,7 +8,6 @@ from typing import Optional, Dict, List
 from collections import deque
 import pandas as pd
 
-from utils.logger import logger
 from core.risk_manager import risk_manager
 
 
@@ -37,8 +36,6 @@ class MarketDataBuffer:
         # Replace all candles (for now - can optimize later with incremental updates)
         self.candles.clear()
         self.candles.extend(new_candles)
-
-        logger.debug(f"Buffer updated: {len(self.candles)} candles for {symbol} {timeframe}")
 
     def get_latest(self, count: int = 200) -> List[Dict]:
         """Get latest N candles"""
@@ -321,15 +318,12 @@ class DataManager:
                 # Update position tracking (CRITICAL - enforces MaxLotsPerSymbol = 0.10)
                 if self.positions:
                     risk_manager.update_from_positions(self.positions)
-                    logger.debug(f"Risk manager updated with {len(self.positions)} positions")
 
             except Exception as risk_error:
-                logger.error(f"Error updating risk manager: {risk_error}")
-
-            logger.debug(f"Data manager updated at {self.last_update}")
+                pass
 
         except Exception as e:
-            logger.exception(f"Error updating data manager: {e}")
+            pass
 
     def update_candles(self, candles_df: pd.DataFrame, symbol: str, timeframe: str):
         """Update candle buffer"""

@@ -5,7 +5,6 @@ Symbol position limits, risk calculations, and exposure tracking
 
 from typing import Dict, Tuple, List
 from datetime import datetime
-from utils.logger import logger
 
 
 class SymbolExposure:
@@ -56,7 +55,6 @@ class RiskManager:
         self.last_daily_reset = datetime.now().date()
         self.last_weekly_reset = datetime.now().date()
 
-        logger.info(f"✓ Risk Manager initialized: Max {self.max_lots_per_symbol} lots per symbol (USER REQUIREMENT)")
 
     def check_symbol_limit(self, symbol: str, requested_lot: float) -> Tuple[bool, str]:
         """
@@ -134,8 +132,7 @@ class RiskManager:
         # Check for limit violations and warn
         for symbol, exposure in self.symbol_exposure.items():
             if exposure.total_lots > self.max_lots_per_symbol:
-                logger.error(f"⚠️ SYMBOL LIMIT EXCEEDED: {symbol} has {exposure.total_lots:.3f} lots "
-                           f"(limit: {self.max_lots_per_symbol:.3f})")
+                pass  # Limit exceeded
 
     def update_symbol_exposure(self, symbol: str, lot_size: float, is_opening: bool = True):
         """
@@ -153,10 +150,8 @@ class RiskManager:
 
         if is_opening:
             exposure.total_lots += lot_size
-            logger.info(f"Symbol exposure updated: {symbol} = {exposure.total_lots:.2f} lots")
         else:
             exposure.total_lots = max(0.0, exposure.total_lots - lot_size)
-            logger.info(f"Symbol exposure reduced: {symbol} = {exposure.total_lots:.2f} lots")
 
     def get_symbol_exposure(self, symbol: str) -> Dict[str, float]:
         """Get current exposure for symbol"""
@@ -254,7 +249,6 @@ class RiskManager:
             # Reduce to fit limit
             current_exposure = self.symbol_exposure.get(symbol, 0.0)
             lot_size = max(0.01, self.max_lots_per_symbol - current_exposure)
-            logger.warning(f"Lot size reduced to fit symbol limit: {lot_size:.2f}")
 
         return {
             'lot_size': lot_size,
@@ -296,7 +290,6 @@ class RiskManager:
         risk = max(0.1, min(2.0, risk))  # Between 0.1% and 2.0%
 
         self.current_risk_percent = risk
-        logger.info(f"Risk adjusted: {self.base_risk_percent:.2f}% → {self.current_risk_percent:.2f}%")
 
     def update_account(self, balance: float, equity: float = None, daily_pnl: float = None):
         """
@@ -323,13 +316,11 @@ class RiskManager:
         # Check for daily reset
         today = datetime.now().date()
         if today != self.last_daily_reset:
-            logger.info(f"Daily P&L reset triggered (previous: ${self.daily_pnl:.2f})")
             self.daily_pnl = 0.0
             self.last_daily_reset = today
 
         # Check for weekly reset (Monday)
         if today.weekday() == 0 and today != self.last_weekly_reset:
-            logger.info(f"Weekly P&L reset triggered (previous: ${self.weekly_pnl:.2f})")
             self.weekly_pnl = 0.0
             self.last_weekly_reset = today
 

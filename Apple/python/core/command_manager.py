@@ -8,7 +8,6 @@ import os
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any
-from utils.logger import logger
 
 
 class CommandManager:
@@ -22,7 +21,6 @@ class CommandManager:
         self.commands_file = self.find_commands_file()
         self.command_queue = []
 
-        logger.info(f"✓ Command Manager initialized: {self.commands_file}")
 
     def find_commands_file(self) -> Path:
         """Find or create commands.json in MT5 Common Files"""
@@ -36,12 +34,10 @@ class CommandManager:
         for path in possible_paths:
             if path.exists():
                 commands_path = path / 'commands.json'
-                logger.info(f"Found MT5 Common Files at: {path}")
 
                 # Create commands file if it doesn't exist
                 if not commands_path.exists():
                     commands_path.write_text(json.dumps({'commands': []}, indent=2))
-                    logger.info(f"Created commands.json at: {commands_path}")
 
                 return commands_path
 
@@ -51,7 +47,6 @@ class CommandManager:
         if not local_path.exists():
             local_path.write_text(json.dumps({'commands': []}, indent=2))
 
-        logger.warning(f"Using local fallback for commands.json: {local_path}")
         return local_path
 
     def send_filter_toggle(self, filter_name: str, enabled: bool):
@@ -70,7 +65,6 @@ class CommandManager:
         }
 
         self._send_command(command)
-        logger.info(f"✓ Filter command sent: {filter_name} = {'ON' if enabled else 'OFF'}")
 
     def send_risk_update(self, risk_percent: float):
         """
@@ -86,7 +80,6 @@ class CommandManager:
         }
 
         self._send_command(command)
-        logger.info(f"✓ Risk command sent: {risk_percent}%")
 
     def send_trading_mode(self, enabled: bool):
         """
@@ -102,7 +95,6 @@ class CommandManager:
         }
 
         self._send_command(command)
-        logger.info(f"✓ Trading mode: {'ENABLED' if enabled else 'DISABLED'}")
 
     def send_order(self, order_type: str, symbol: str, lot_size: float):
         """
@@ -122,7 +114,6 @@ class CommandManager:
         }
 
         self._send_command(command)
-        logger.info(f"✓ Order command sent: {order_type} {lot_size} {symbol}")
 
     def send_visual_toggle(self, visual_name: str, enabled: bool):
         """
@@ -140,7 +131,6 @@ class CommandManager:
         }
 
         self._send_command(command)
-        logger.debug(f"Visual toggle: {visual_name} = {'ON' if enabled else 'OFF'}")
 
     def _send_command(self, command: Dict[str, Any]):
         """
@@ -171,19 +161,16 @@ class CommandManager:
             with open(self.commands_file, 'w') as f:
                 json.dump(data, f, indent=2)
 
-            logger.debug(f"Command written to: {self.commands_file}")
-
         except Exception as e:
-            logger.error(f"Failed to send command: {e}")
+            pass
 
     def clear_commands(self):
         """Clear all pending commands"""
         try:
             with open(self.commands_file, 'w') as f:
                 json.dump({'commands': []}, f, indent=2)
-            logger.info("Commands cleared")
         except Exception as e:
-            logger.error(f"Failed to clear commands: {e}")
+            pass
 
 
 # Global command manager instance
