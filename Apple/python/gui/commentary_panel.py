@@ -15,6 +15,7 @@ from collections import deque
 
 from config import settings, PRIORITY_CRITICAL, PRIORITY_IMPORTANT, PRIORITY_INFO
 from utils.logger import logger
+from analysis.trading_commentary import commentary_generator
 
 
 class CommentaryPanel(QWidget):
@@ -36,7 +37,15 @@ class CommentaryPanel(QWidget):
 
         self.init_ui()
 
-        logger.info("Commentary panel initialized")
+        # Setup auto-update timer for live commentary
+        self.update_timer = QTimer()
+        self.update_timer.timeout.connect(self.update_live_commentary)
+        self.update_timer.start(10000)  # Update every 10 seconds
+
+        # Generate initial commentary
+        self.update_live_commentary()
+
+        logger.info("Commentary panel initialized with live updates")
 
     def init_ui(self):
         """Initialize user interface"""
@@ -112,10 +121,11 @@ class CommentaryPanel(QWidget):
         layout.addLayout(search_layout)
 
         # ============================================================
-        # COMMENTARY TEXT AREA
+        # COMMENTARY TEXT AREA (HTML SUPPORTED)
         # ============================================================
         self.commentary_text = QTextEdit()
         self.commentary_text.setReadOnly(True)
+        self.commentary_text.setAcceptRichText(True)  # Enable HTML
         self.commentary_text.setStyleSheet(f"""
             QTextEdit {{
                 background-color: {settings.theme.surface};
@@ -129,9 +139,6 @@ class CommentaryPanel(QWidget):
             }}
         """)
         layout.addWidget(self.commentary_text)
-
-        # Add initial message
-        self.add_comment("AppleTrader Pro - Commentary Feed Initialized", PRIORITY_INFO)
 
     def add_comment(self, message: str, priority: int = PRIORITY_INFO):
         """
@@ -296,3 +303,32 @@ class CommentaryPanel(QWidget):
         except Exception as e:
             logger.exception(f"Error exporting commentary: {e}")
             self.add_comment(f"Export failed: {e}", PRIORITY_CRITICAL)
+
+    def update_live_commentary(self):
+        """Update with live institutional trading commentary"""
+        try:
+            # Generate fresh commentary
+            commentary_data = commentary_generator.generate_commentary()
+
+            # Format as HTML
+            html_content = commentary_generator.format_commentary_html(commentary_data)
+
+            # Display in text widget
+            self.commentary_text.setHtml(html_content)
+
+            # Auto-scroll to top to show current analysis
+            cursor = self.commentary_text.textCursor()
+            cursor.movePosition(QTextCursor.MoveOperation.Start)
+            self.commentary_text.setTextCursor(cursor)
+
+            logger.debug("Live commentary updated")
+
+        except Exception as e:
+            logger.exception(f"Error updating live commentary: {e}")
+            self.commentary_text.setHtml(f"""
+            <div style="color: #EF4444; font-family: monospace; padding: 20px;">
+                ⚠️ Commentary Update Error: {str(e)}
+                <br><br>
+                Retrying in 10 seconds...
+            </div>
+            """)
