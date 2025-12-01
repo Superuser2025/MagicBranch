@@ -128,6 +128,9 @@ class NewsImpactWidget(QWidget):
         self.alert_timer.timeout.connect(self.check_alerts)
         self.alert_timer.start(10000)
 
+        # Load sample news events
+        self.load_sample_data()
+
     def init_ui(self):
         """Initialize the user interface"""
         layout = QVBoxLayout(self)

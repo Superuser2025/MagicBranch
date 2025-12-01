@@ -103,6 +103,9 @@ class InstitutionalOrderFlowWidget(QWidget):
         self.refresh_timer.timeout.connect(self.refresh_display)
         self.refresh_timer.start(3000)
 
+        # Load sample order flow data
+        self.load_sample_data()
+
     def init_ui(self):
         """Initialize the user interface"""
         layout = QVBoxLayout(self)
@@ -371,3 +374,54 @@ class InstitutionalOrderFlowWidget(QWidget):
             return []
 
         return order_flow_detector.get_chart_overlays(self.current_symbol, hours)
+
+    def load_sample_data(self):
+        """Load sample institutional order flow data"""
+        from datetime import datetime, timedelta
+
+        # Create sample orders
+        sample_orders = [
+            InstitutionalOrder(
+                symbol='GBPUSD',
+                order_type='ABSORPTION',
+                direction='BUY',
+                price=1.31850,
+                size_usd=25000000,
+                confidence=92,
+                timestamp=datetime.now() - timedelta(minutes=5)
+            ),
+            InstitutionalOrder(
+                symbol='GBPUSD',
+                order_type='SWEEP',
+                direction='SELL',
+                price=1.32120,
+                size_usd=18000000,
+                confidence=88,
+                timestamp=datetime.now() - timedelta(minutes=12)
+            ),
+            InstitutionalOrder(
+                symbol='GBPUSD',
+                order_type='ACCUMULATION',
+                direction='BUY',
+                price=1.31750,
+                size_usd=35000000,
+                confidence=95,
+                timestamp=datetime.now() - timedelta(minutes=18)
+            ),
+            InstitutionalOrder(
+                symbol='EURUSD',
+                order_type='ABSORPTION',
+                direction='SELL',
+                price=1.16125,
+                size_usd=22000000,
+                confidence=85,
+                timestamp=datetime.now() - timedelta(minutes=25)
+            )
+        ]
+
+        # Add sample orders to the detector
+        order_flow_detector.recent_orders = sample_orders
+        self.current_symbol = 'GBPUSD'
+
+        # Refresh display
+        self.refresh_display()
