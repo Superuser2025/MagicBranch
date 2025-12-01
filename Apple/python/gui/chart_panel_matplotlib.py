@@ -417,6 +417,9 @@ class ChartPanel(QWidget):
                 pad=10
             )
 
+        # Draw institutional overlays (FVG, OB, Liquidity)
+        self.draw_chart_overlays()
+
         # Adjust layout with proper margins
         try:
             self.canvas.fig.subplots_adjust(left=0.08, right=0.98, top=0.95, bottom=0.08)
@@ -451,6 +454,124 @@ class ChartPanel(QWidget):
 
         except Exception as e:
             logger.debug(f"Could not update last candle: {e}")
+
+    def draw_chart_overlays(self):
+        """Draw FVG/OB/Liquidity zones on chart"""
+        try:
+            # Get zone data from data_manager
+            market_state = data_manager.get_market_state()
+
+            # For now, draw sample zones
+            # In production, this reads actual zone data from EA
+            self.draw_sample_fvg()
+            self.draw_sample_order_block()
+            self.draw_sample_liquidity()
+
+        except Exception as e:
+            logger.debug(f"Could not draw overlays: {e}")
+
+    def draw_sample_fvg(self):
+        """Draw Fair Value Gap rectangle (sample)"""
+        if not self.candle_data or len(self.candle_data) < 20:
+            return
+
+        # Sample FVG in middle of chart
+        start_idx = len(self.candle_data) // 3
+        end_idx = start_idx + 5
+        low_price = min([c['low'] for c in self.candle_data[start_idx:end_idx]])
+        high_price = max([c['high'] for c in self.candle_data[start_idx:end_idx]])
+
+        # Draw FVG rectangle (cyan with transparency)
+        rect = Rectangle(
+            (start_idx, low_price),
+            end_idx - start_idx,
+            high_price - low_price,
+            linewidth=2,
+            edgecolor='#06B6D4',
+            facecolor='#06B6D4',
+            alpha=0.15,
+            linestyle='--',
+            label='FVG'
+        )
+        self.canvas.axes.add_patch(rect)
+
+        # Add label
+        self.canvas.axes.text(
+            start_idx + 0.5,
+            high_price,
+            'FVG',
+            fontsize=8,
+            color='#06B6D4',
+            weight='bold',
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='#0A0E27', edgecolor='#06B6D4', alpha=0.8)
+        )
+
+    def draw_sample_order_block(self):
+        """Draw Order Block rectangle (sample)"""
+        if not self.candle_data or len(self.candle_data) < 40:
+            return
+
+        # Sample OB in latter part of chart
+        start_idx = len(self.candle_data) // 2
+        end_idx = start_idx + 8
+        low_price = min([c['low'] for c in self.candle_data[start_idx:end_idx]])
+        high_price = max([c['high'] for c in self.candle_data[start_idx:end_idx]])
+
+        # Draw OB rectangle (yellow/orange)
+        color = '#F59E0B'  # Orange for bearish OB
+        rect = Rectangle(
+            (start_idx, low_price),
+            end_idx - start_idx,
+            high_price - low_price,
+            linewidth=2,
+            edgecolor=color,
+            facecolor=color,
+            alpha=0.20,
+            linestyle='-',
+            label='Order Block'
+        )
+        self.canvas.axes.add_patch(rect)
+
+        # Add label
+        self.canvas.axes.text(
+            start_idx + 1,
+            low_price,
+            'OB',
+            fontsize=8,
+            color=color,
+            weight='bold',
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='#0A0E27', edgecolor=color, alpha=0.8)
+        )
+
+    def draw_sample_liquidity(self):
+        """Draw Liquidity horizontal lines (sample)"""
+        if not self.candle_data or len(self.candle_data) < 10:
+            return
+
+        # Find a swing high for liquidity
+        highs = [c['high'] for c in self.candle_data]
+        liquidity_price = max(highs[len(highs)//3:len(highs)//2])
+
+        # Draw liquidity line (red)
+        self.canvas.axes.axhline(
+            y=liquidity_price,
+            color='#EF4444',
+            linestyle=':',
+            linewidth=2,
+            alpha=0.7,
+            label='Liquidity'
+        )
+
+        # Add label
+        self.canvas.axes.text(
+            len(self.candle_data) - 5,
+            liquidity_price,
+            'LIQUIDITY',
+            fontsize=8,
+            color='#EF4444',
+            weight='bold',
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='#0A0E27', edgecolor='#EF4444', alpha=0.8)
+        )
 
     def update_chart(self):
         """Update chart with latest price (only updates last candle, no reload)"""
