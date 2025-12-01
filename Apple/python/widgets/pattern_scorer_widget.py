@@ -32,6 +32,7 @@ class SimpleTheme:
     font_size_md = 14
     font_size_lg = 16
     font_size_xl = 18
+    font_family_mono = 'Consolas, Monaco, monospace'
 
 class SimpleSettings:
     theme = SimpleTheme()
