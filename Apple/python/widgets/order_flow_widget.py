@@ -379,43 +379,48 @@ class InstitutionalOrderFlowWidget(QWidget):
         """Load sample institutional order flow data"""
         from datetime import datetime, timedelta
 
-        # Create sample orders
+        # Create sample orders using correct constructor signature
+        # InstitutionalOrder(symbol, timestamp, price, direction, volume_multiplier, pip_move, order_type, confidence)
         sample_orders = [
             InstitutionalOrder(
                 symbol='GBPUSD',
-                order_type='ABSORPTION',
-                direction='BUY',
+                timestamp=datetime.now() - timedelta(minutes=5),
                 price=1.31850,
-                size_usd=25000000,
-                confidence=92,
-                timestamp=datetime.now() - timedelta(minutes=5)
-            ),
-            InstitutionalOrder(
-                symbol='GBPUSD',
-                order_type='SWEEP',
-                direction='SELL',
-                price=1.32120,
-                size_usd=18000000,
-                confidence=88,
-                timestamp=datetime.now() - timedelta(minutes=12)
-            ),
-            InstitutionalOrder(
-                symbol='GBPUSD',
-                order_type='ACCUMULATION',
                 direction='BUY',
+                volume_multiplier=2.5,
+                pip_move=28.0,
+                order_type='absorption',
+                confidence=92
+            ),
+            InstitutionalOrder(
+                symbol='GBPUSD',
+                timestamp=datetime.now() - timedelta(minutes=12),
+                price=1.32120,
+                direction='SELL',
+                volume_multiplier=1.8,
+                pip_move=22.0,
+                order_type='sweep',
+                confidence=88
+            ),
+            InstitutionalOrder(
+                symbol='GBPUSD',
+                timestamp=datetime.now() - timedelta(minutes=18),
                 price=1.31750,
-                size_usd=35000000,
-                confidence=95,
-                timestamp=datetime.now() - timedelta(minutes=18)
+                direction='BUY',
+                volume_multiplier=3.5,
+                pip_move=35.0,
+                order_type='accumulation',
+                confidence=95
             ),
             InstitutionalOrder(
                 symbol='EURUSD',
-                order_type='ABSORPTION',
-                direction='SELL',
+                timestamp=datetime.now() - timedelta(minutes=25),
                 price=1.16125,
-                size_usd=22000000,
-                confidence=85,
-                timestamp=datetime.now() - timedelta(minutes=25)
+                direction='SELL',
+                volume_multiplier=2.2,
+                pip_move=25.0,
+                order_type='absorption',
+                confidence=85
             )
         ]
 
