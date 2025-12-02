@@ -279,10 +279,19 @@ class RiskRewardWidget(QWidget):
 
     def load_sample_data(self):
         """Load sample structure levels and calculate TPs for demonstration"""
-        # Sample structure levels for EURUSD
+        # Sample structure levels for EURUSD - must be dictionaries with price, strength, timeframe
         sample_structure = {
-            'support': [1.09200, 1.08850, 1.08500],
-            'resistance': [1.10500, 1.10800, 1.11200, 1.11650]
+            'support': [
+                {'price': 1.09200, 'strength': 750, 'timeframe': 'H4'},
+                {'price': 1.08850, 'strength': 620, 'timeframe': 'H1'},
+                {'price': 1.08500, 'strength': 800, 'timeframe': 'D1'}
+            ],
+            'resistance': [
+                {'price': 1.10500, 'strength': 700, 'timeframe': 'H4'},
+                {'price': 1.10800, 'strength': 850, 'timeframe': 'D1'},
+                {'price': 1.11200, 'strength': 680, 'timeframe': 'H4'},
+                {'price': 1.11650, 'strength': 900, 'timeframe': 'D1'}
+            ]
         }
         self.set_structure_levels(sample_structure)
 
