@@ -437,5 +437,3 @@ class PatternScorerWidget(QWidget):
             )
         else:
             self.historical_label.setText("No historical data available")
-
-        logger.info(f"Pattern score updated: {score.pattern_type} = {score.total_score}/100 ({score.quality_tier})")
