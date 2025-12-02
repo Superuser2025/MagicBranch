@@ -11,6 +11,7 @@ from PyQt6.QtGui import QAction, QFont
 from datetime import datetime
 
 # Import all improvement widgets
+from widgets.opportunity_scanner_widget import OpportunityScannerWidget
 from widgets.price_action_commentary_widget import PriceActionCommentaryWidget
 from widgets.correlation_heatmap_widget import CorrelationHeatmapWidget
 from widgets.volatility_position_widget import VolatilityPositionWidget
@@ -60,6 +61,11 @@ class MainWindow(QMainWindow):
         # === TOP TOOLBAR ===
         toolbar_layout = self.create_toolbar()
         main_layout.addLayout(toolbar_layout)
+
+        # === OPPORTUNITY SCANNER (fills top space on big screens) ===
+        self.scanner_widget = OpportunityScannerWidget()
+        self.scanner_widget.setMaximumHeight(220)  # Fixed height for scanner
+        main_layout.addWidget(self.scanner_widget)
 
         # === MAIN CONTENT (3 COLUMNS) ===
         splitter = QSplitter(Qt.Orientation.Horizontal)
