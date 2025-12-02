@@ -249,7 +249,12 @@ class CorrelationHeatmapWidget(QWidget):
 
         if strongest_positive:
             pos_lines = []
-            for (s1, s2), corr in strongest_positive[:5]:
+            for item in strongest_positive[:5]:
+                # Handle both tuple formats: (s1, s2, corr) or ((s1, s2), corr)
+                if len(item) == 3:
+                    s1, s2, corr = item
+                else:
+                    (s1, s2), corr = item
                 pos_lines.append(f"{s1}/{s2}: {corr:+.3f}")
             self.positive_text.setPlainText('\n'.join(pos_lines))
         else:
@@ -257,7 +262,12 @@ class CorrelationHeatmapWidget(QWidget):
 
         if strongest_negative:
             neg_lines = []
-            for (s1, s2), corr in strongest_negative[:5]:
+            for item in strongest_negative[:5]:
+                # Handle both tuple formats: (s1, s2, corr) or ((s1, s2), corr)
+                if len(item) == 3:
+                    s1, s2, corr = item
+                else:
+                    (s1, s2), corr = item
                 neg_lines.append(f"{s1}/{s2}: {corr:+.3f}")
             self.negative_text.setPlainText('\n'.join(neg_lines))
         else:
