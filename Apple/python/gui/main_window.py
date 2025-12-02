@@ -368,16 +368,18 @@ class MainWindow(QMainWindow):
 
         # Send order command to MT5 via command manager
         from core.command_manager import command_manager
-        success = command_manager.send_market_order(
-            order_type=order_type,
-            symbol=self.current_symbol,
-            volume=0.01  # Default volume, can be made configurable
-        )
-
-        if success:
-            self.status_label.setText(f"✓ {order_type} order sent successfully")
-        else:
-            self.status_label.setText(f"✗ Failed to send {order_type} order")
+        try:
+            # CORRECT METHOD: send_order() with lot_size parameter
+            command_manager.send_order(
+                order_type=order_type,
+                symbol=self.current_symbol,
+                lot_size=0.01  # Default volume
+            )
+            self.status_label.setText(f"✓ {order_type} order sent to MT5 EA")
+            print(f"[Main Window] {order_type} order command sent successfully")
+        except Exception as e:
+            self.status_label.setText(f"✗ Failed to send {order_type} order: {e}")
+            print(f"[Main Window] Error sending order: {e}")
 
     def on_setting_changed(self, setting_name: str, value):
         """Handle setting change from controls panel"""
@@ -396,15 +398,24 @@ class MainWindow(QMainWindow):
 
             interval = speed_intervals.get(value, 1000)
 
-            # Update chart refresh timer
+            # Update chart refresh timer - STOP, CHANGE, START to apply immediately
             if hasattr(self, 'chart_panel') and hasattr(self.chart_panel, 'update_timer'):
+                self.chart_panel.update_timer.stop()
                 self.chart_panel.update_timer.setInterval(interval)
+                self.chart_panel.update_timer.start()
                 print(f"[Main Window] Chart refresh rate changed to {interval}ms ({value})")
                 self.status_label.setText(f"Chart refresh: {interval/1000}s")
 
+                # Force immediate chart reload to show it's working
+                if hasattr(self.chart_panel, 'load_initial_data'):
+                    self.chart_panel.load_initial_data()
+                    print(f"[Main Window] Chart reloaded immediately")
+
             # Update main window timer
             if hasattr(self, 'data_timer'):
+                self.data_timer.stop()
                 self.data_timer.setInterval(interval)
+                self.data_timer.start()
                 print(f"[Main Window] Data update rate changed to {interval}ms ({value})")
 
         # Handle filter changes

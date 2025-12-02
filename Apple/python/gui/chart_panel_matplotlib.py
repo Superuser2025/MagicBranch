@@ -889,34 +889,25 @@ class ChartPanel(QWidget):
         )
 
     def update_chart(self):
-        """Update chart with latest price (only updates last candle, no reload)"""
+        """Update chart - reload data from MT5 to show new candles"""
 
         try:
             # Skip update if we're currently loading new data (symbol/timeframe change)
             if self.is_loading:
                 return
 
-            # Update only the last candle with current price
-            # DO NOT reload all 100 candles - that causes the "morphing" issue!
-            self.update_last_candle_only()
-
-            if self.candle_data:
-                self.plot_candlesticks()
-                self.status_label.setText(f"Updated: {datetime.now().strftime('%H:%M:%S')}")
-                self.status_label.setStyleSheet(f"""
-                    QLabel {{
-                        color: {settings.theme.success};
-                        font-size: {settings.theme.font_size_sm}px;
-                        background: transparent;
-                    }}
-                """)
+            # ALWAYS reload data to get new candles from MT5
+            # This is needed so the chart actually updates with market movement
+            print(f"[Chart] Reloading data at {datetime.now().strftime('%H:%M:%S')}")
+            self.load_initial_data()
 
         except Exception as e:
+            print(f"[Chart] Error updating: {e}")
             self.status_label.setText("Update Error")
             self.status_label.setStyleSheet(f"""
                 QLabel {{
                     color: {settings.theme.danger};
-                    font-size: {settings.theme.font_size_sm}px;
+                    font_size: {settings.theme.font_size_sm}px;
                     background: transparent;
                 }}
             """)
