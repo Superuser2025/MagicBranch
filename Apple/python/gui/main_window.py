@@ -25,6 +25,7 @@ from widgets.equity_curve_widget import EquityCurveWidget
 from widgets.trade_journal_widget import TradeJournalWidget
 from gui.chart_panel_matplotlib import ChartPanel
 from gui.controls_panel import ControlsPanel
+from core.mt5_connector import MT5Connector
 
 
 class MainWindow(QMainWindow):
@@ -38,6 +39,13 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.current_symbol = "EURUSD"
         self.current_timeframe = "H4"
+
+        # Initialize MT5 connector
+        self.mt5_connector = MT5Connector()
+        self.mt5_connector.connection_status_changed.connect(self.on_mt5_connection_changed)
+        self.mt5_connector.data_updated.connect(self.on_mt5_data_updated)
+        self.mt5_connector.error_occurred.connect(self.on_mt5_error)
+
         self.init_ui()
 
         # Start data update timer
@@ -295,6 +303,34 @@ class MainWindow(QMainWindow):
 
         # Update status bar
         self.status_bar.showMessage(f"Updated: {datetime.now().strftime('%H:%M:%S')}", 2000)
+
+    def on_mt5_connection_changed(self, connected: bool):
+        """Handle MT5 connection status change"""
+        if connected:
+            self.connection_label.setText("🟢 MT5: Connected")
+            self.connection_label.setStyleSheet("color: #10B981; background-color: #1E293B; padding: 5px 10px; border-radius: 5px;")
+            self.status_label.setText("MT5 connection established")
+        else:
+            self.connection_label.setText("🔴 MT5: Disconnected")
+            self.connection_label.setStyleSheet("color: #EF4444; background-color: #1E293B; padding: 5px 10px; border-radius: 5px;")
+            self.status_label.setText("MT5 connection lost")
+
+    def on_mt5_data_updated(self, data: dict):
+        """Handle new data from MT5"""
+        # Extract symbol and timeframe from data if available
+        if 'symbol' in data:
+            self.current_symbol = data['symbol']
+        if 'timeframe' in data:
+            self.current_timeframe = data['timeframe']
+
+        # TODO: Feed real data to widgets here
+        # For now just update status
+        self.status_label.setText(f"MT5 data received: {self.current_symbol} {self.current_timeframe}")
+
+    def on_mt5_error(self, error_message: str):
+        """Handle MT5 error"""
+        self.status_label.setText(f"MT5 Error: {error_message}")
+        print(f"[MT5 ERROR] {error_message}")
 
     def on_export(self):
         """Handle export action"""
