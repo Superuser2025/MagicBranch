@@ -104,8 +104,9 @@ class InstitutionalOrderFlowWidget(QWidget):
         self.refresh_timer.timeout.connect(self.refresh_display)
         self.refresh_timer.start(3000)
 
-        # Load sample order flow data (will be replaced when real data arrives)
-        self.load_sample_data()
+        # DON'T load sample data - wait for real MT5 data
+        # Demo data confuses users when MT5 is connected
+        print("[Order Flow] Waiting for real MT5 data (no demo data loaded)")
 
     def init_ui(self):
         """Initialize the user interface"""
