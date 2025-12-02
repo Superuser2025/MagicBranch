@@ -6,10 +6,11 @@ All EA settings, filters, risk management, and trading controls
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QCheckBox,
     QPushButton, QSlider, QFrame, QGroupBox, QComboBox, QSpinBox,
-    QDoubleSpinBox, QScrollArea
+    QDoubleSpinBox, QScrollArea, QTextEdit
 )
-from PyQt6.QtCore import Qt, pyqtSignal, QPropertyAnimation, QEasingCurve
+from PyQt6.QtCore import Qt, pyqtSignal, QPropertyAnimation, QEasingCurve, QTimer
 from PyQt6.QtGui import QFont
+from datetime import datetime
 
 from core.command_manager import command_manager
 
@@ -121,6 +122,52 @@ class ControlsPanel(QWidget):
             }}
         """)
         layout.addWidget(header)
+
+        # ============================================================
+        # STATUS FEEDBACK AREA
+        # ============================================================
+        status_frame = QFrame()
+        status_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {settings.theme.surface};
+                border: 1px solid {settings.theme.border_color};
+                border-radius: 8px;
+                padding: 12px;
+            }}
+        """)
+        status_layout = QVBoxLayout(status_frame)
+        status_layout.setSpacing(6)
+
+        status_title = QLabel("📊 Status Log")
+        status_title.setStyleSheet(f"""
+            QLabel {{
+                color: {settings.theme.accent};
+                font-size: {settings.theme.font_size_sm}px;
+                font-weight: 600;
+                background: transparent;
+                border: none;
+            }}
+        """)
+        status_layout.addWidget(status_title)
+
+        self.status_text = QTextEdit()
+        self.status_text.setReadOnly(True)
+        self.status_text.setMaximumHeight(100)
+        self.status_text.setStyleSheet(f"""
+            QTextEdit {{
+                background-color: {settings.theme.background};
+                border: 1px solid {settings.theme.border_color};
+                border-radius: 4px;
+                color: {settings.theme.text_secondary};
+                font-size: {settings.theme.font_size_sm}px;
+                font-family: 'Courier New', monospace;
+                padding: 4px;
+            }}
+        """)
+        self.status_text.setPlainText(f"[{self._timestamp()}] Controls initialized\n[{self._timestamp()}] Ready to receive commands")
+        status_layout.addWidget(self.status_text)
+
+        layout.addWidget(status_frame)
 
         # ============================================================
         # TRADING MODE (Big Toggle)
@@ -327,7 +374,7 @@ class ControlsPanel(QWidget):
 
         # BUY button
         buy_button = QPushButton("📈 BUY")
-        buy_button.clicked.connect(lambda: self.order_requested.emit('BUY'))
+        buy_button.clicked.connect(lambda: self._on_order_button('BUY'))
         buy_button.setFixedHeight(50)
         buy_button.setStyleSheet(f"""
             QPushButton {{
@@ -348,7 +395,7 @@ class ControlsPanel(QWidget):
 
         # SELL button
         sell_button = QPushButton("📉 SELL")
-        sell_button.clicked.connect(lambda: self.order_requested.emit('SELL'))
+        sell_button.clicked.connect(lambda: self._on_order_button('SELL'))
         sell_button.setFixedHeight(50)
         sell_button.setStyleSheet(f"""
             QPushButton {{
@@ -689,6 +736,35 @@ class ControlsPanel(QWidget):
         """)
         return checkbox
 
+    def _timestamp(self):
+        """Get formatted timestamp for status log"""
+        return datetime.now().strftime("%H:%M:%S")
+
+    def _log_status(self, message: str, color: str = None):
+        """Add message to status log"""
+        timestamp = self._timestamp()
+        current_text = self.status_text.toPlainText()
+
+        # Keep only last 5 messages
+        lines = current_text.split('\n')
+        if len(lines) > 5:
+            lines = lines[-4:]
+
+        new_message = f"[{timestamp}] {message}"
+        lines.append(new_message)
+
+        self.status_text.setPlainText('\n'.join(lines))
+
+        # Scroll to bottom
+        self.status_text.verticalScrollBar().setValue(
+            self.status_text.verticalScrollBar().maximum()
+        )
+
+    def _on_order_button(self, order_type: str):
+        """Handle quick order button click"""
+        self._log_status(f"✓ {order_type} order requested")
+        self.order_requested.emit(order_type)
+
     def toggle_trading_mode(self):
         """Toggle between indicator and trading mode"""
 
@@ -708,6 +784,7 @@ class ControlsPanel(QWidget):
                 QPushButton:hover {{
                 }}
             """)
+            self._log_status("✓ AUTO TRADING MODE ENABLED")
         else:
             self.mode_button.setText("🔴 INDICATOR MODE")
             self.mode_button.setStyleSheet(f"""
@@ -722,6 +799,7 @@ class ControlsPanel(QWidget):
                 QPushButton:hover {{
                 }}
             """)
+            self._log_status("✓ INDICATOR MODE ENABLED")
 
         # Send command to EA
         command_manager.send_trading_mode(is_trading)
@@ -733,6 +811,8 @@ class ControlsPanel(QWidget):
 
         speed = self.speed_combo.itemData(index)
         if speed:
+            speed_text = UPDATE_SPEED_CONFIGS[speed]['description']
+            self._log_status(f"✓ Update speed: {speed_text}")
             self.setting_changed.emit('update_speed', speed)
 
     def on_risk_changed(self, value: int):
@@ -741,6 +821,7 @@ class ControlsPanel(QWidget):
         risk_percent = value / 10.0  # Convert back to percentage
         self.risk_label.setText(f"Risk per Trade: {risk_percent:.1f}%")
         settings.trading.default_risk_percent = risk_percent
+        self._log_status(f"✓ Risk per trade: {risk_percent:.1f}%")
         self.setting_changed.emit('risk_percent', risk_percent)
 
         # Send to EA
@@ -757,6 +838,10 @@ class ControlsPanel(QWidget):
         """
         # Send command to EA via JSON
         command_manager.send_filter_toggle(filter_name, enabled)
+
+        # Log the change
+        status = "ENABLED" if enabled else "DISABLED"
+        self._log_status(f"✓ {filter_name}: {status}")
 
         # Emit signal for any local listeners
         self.setting_changed.emit(filter_name, enabled)
