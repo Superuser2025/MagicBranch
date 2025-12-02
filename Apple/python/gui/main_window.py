@@ -11,6 +11,7 @@ from PyQt6.QtGui import QAction, QFont
 from datetime import datetime
 
 # Import all improvement widgets
+from widgets.price_action_commentary_widget import PriceActionCommentaryWidget
 from widgets.correlation_heatmap_widget import CorrelationHeatmapWidget
 from widgets.volatility_position_widget import VolatilityPositionWidget
 from widgets.session_momentum_widget import SessionMomentumWidget
@@ -151,35 +152,42 @@ class MainWindow(QMainWindow):
         tabs = QTabWidget()
         tabs.setTabPosition(QTabWidget.TabPosition.North)
 
-        # Tab 1: Momentum & Correlation
+        # Tab 1: PRICE ACTION COMMENTARY (Most Important!)
+        commentary_tab = QWidget()
+        commentary_layout = QVBoxLayout(commentary_tab)
+        self.commentary_widget = PriceActionCommentaryWidget()
+        commentary_layout.addWidget(self.commentary_widget)
+        tabs.addTab(commentary_tab, "📊 Price Action")
+
+        # Tab 2: Momentum & Correlation
         momentum_tab = QWidget()
         momentum_layout = QVBoxLayout(momentum_tab)
         self.momentum_widget = SessionMomentumWidget()
         momentum_layout.addWidget(self.momentum_widget)
         tabs.addTab(momentum_tab, "⚡ Momentum")
 
-        # Tab 2: Correlation Heatmap
+        # Tab 3: Correlation Heatmap
         correlation_tab = QWidget()
         correlation_layout = QVBoxLayout(correlation_tab)
         self.correlation_widget = CorrelationHeatmapWidget()
         correlation_layout.addWidget(self.correlation_widget)
         tabs.addTab(correlation_tab, "🔥 Correlation")
 
-        # Tab 3: Structure Map
+        # Tab 4: Structure Map
         structure_tab = QWidget()
         structure_layout = QVBoxLayout(structure_tab)
         self.structure_widget = MTFStructureWidget()
         structure_layout.addWidget(self.structure_widget)
         tabs.addTab(structure_tab, "📊 Structure")
 
-        # Tab 4: Order Flow
+        # Tab 5: Order Flow
         orderflow_tab = QWidget()
         orderflow_layout = QVBoxLayout(orderflow_tab)
         self.orderflow_widget = InstitutionalOrderFlowWidget()
         orderflow_layout.addWidget(self.orderflow_widget)
         tabs.addTab(orderflow_tab, "💼 Order Flow")
 
-        # Tab 5: News Events
+        # Tab 6: News Events
         news_tab = QWidget()
         news_layout = QVBoxLayout(news_tab)
         self.news_widget = NewsImpactWidget()
