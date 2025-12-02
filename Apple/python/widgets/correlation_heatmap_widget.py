@@ -276,59 +276,109 @@ class CorrelationHeatmapWidget(QWidget):
 
     def update_correlation_table(self, correlation_report: Dict):
         """Update the correlation matrix table"""
-        correlation_matrix = correlation_report.get('correlation_matrix', {})
+        correlation_matrix = correlation_report.get('correlation_matrix', None)
 
-        if not correlation_matrix:
+        # Check if correlation_matrix is None or empty
+        if correlation_matrix is None:
             self.correlation_table.setRowCount(0)
             self.correlation_table.setColumnCount(0)
             return
 
-        # Get unique symbols
-        symbols_set = set()
-        for (s1, s2) in correlation_matrix.keys():
-            symbols_set.add(s1)
-            symbols_set.add(s2)
+        # Handle DataFrame format (from sample data)
+        if isinstance(correlation_matrix, pd.DataFrame):
+            if correlation_matrix.empty:
+                self.correlation_table.setRowCount(0)
+                self.correlation_table.setColumnCount(0)
+                return
 
-        symbols = sorted(symbols_set)[:8]  # Limit to 8 for display
+            symbols = list(correlation_matrix.index)[:8]  # Limit to 8 for display
 
-        # Setup table
-        self.correlation_table.setRowCount(len(symbols))
-        self.correlation_table.setColumnCount(len(symbols))
-        self.correlation_table.setHorizontalHeaderLabels(symbols)
-        self.correlation_table.setVerticalHeaderLabels(symbols)
+            # Setup table
+            self.correlation_table.setRowCount(len(symbols))
+            self.correlation_table.setColumnCount(len(symbols))
+            self.correlation_table.setHorizontalHeaderLabels(symbols)
+            self.correlation_table.setVerticalHeaderLabels(symbols)
 
-        # Fill table
-        for i, sym1 in enumerate(symbols):
-            for j, sym2 in enumerate(symbols):
-                if i == j:
-                    # Diagonal (self-correlation = 1.0)
-                    item = QTableWidgetItem("1.00")
-                    item.setBackground(QBrush(QColor("#808080")))
+            # Fill table from DataFrame
+            for i, sym1 in enumerate(symbols):
+                for j, sym2 in enumerate(symbols):
+                    corr = correlation_matrix.loc[sym1, sym2]
+
+                    # Format value
+                    item = QTableWidgetItem(f"{corr:+.2f}")
+
+                    # Color code based on correlation strength
+                    if corr >= 0.7:
+                        color = '#00ff00'  # Strong positive - green
+                    elif corr >= 0.3:
+                        color = '#88ff88'  # Moderate positive - light green
+                    elif corr >= -0.3:
+                        color = '#808080'  # Weak - gray
+                    elif corr >= -0.7:
+                        color = '#ff8888'  # Moderate negative - light red
+                    else:
+                        color = '#ff0000'  # Strong negative - red
+
+                    item.setBackground(QBrush(QColor(color)))
                     item.setForeground(QBrush(QColor("#ffffff")))
-                else:
-                    # Get correlation
-                    corr = correlation_analyzer.get_correlation(sym1, sym2)
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
 
-                    if corr is not None:
-                        # Format value
-                        item = QTableWidgetItem(f"{corr:+.2f}")
+                    self.correlation_table.setItem(i, j, item)
 
-                        # Color code
-                        color = correlation_analyzer.get_color_for_correlation(corr)
-                        item.setBackground(QBrush(QColor(color)))
+        else:
+            # Handle dict format (original format)
+            if not correlation_matrix:
+                self.correlation_table.setRowCount(0)
+                self.correlation_table.setColumnCount(0)
+                return
+
+            # Get unique symbols
+            symbols_set = set()
+            for (s1, s2) in correlation_matrix.keys():
+                symbols_set.add(s1)
+                symbols_set.add(s2)
+
+            symbols = sorted(symbols_set)[:8]  # Limit to 8 for display
+
+            # Setup table
+            self.correlation_table.setRowCount(len(symbols))
+            self.correlation_table.setColumnCount(len(symbols))
+            self.correlation_table.setHorizontalHeaderLabels(symbols)
+            self.correlation_table.setVerticalHeaderLabels(symbols)
+
+            # Fill table
+            for i, sym1 in enumerate(symbols):
+                for j, sym2 in enumerate(symbols):
+                    if i == j:
+                        # Diagonal (self-correlation = 1.0)
+                        item = QTableWidgetItem("1.00")
+                        item.setBackground(QBrush(QColor("#808080")))
                         item.setForeground(QBrush(QColor("#ffffff")))
                     else:
-                        item = QTableWidgetItem("--")
-                        item.setBackground(QBrush(QColor("#2b2b2b")))
-                        item.setForeground(QBrush(QColor("#888888")))
+                        # Get correlation
+                        corr = correlation_analyzer.get_correlation(sym1, sym2)
 
-                # Center align
-                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        if corr is not None:
+                            # Format value
+                            item = QTableWidgetItem(f"{corr:+.2f}")
 
-                # Make read-only
-                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                            # Color code
+                            color = correlation_analyzer.get_color_for_correlation(corr)
+                            item.setBackground(QBrush(QColor(color)))
+                            item.setForeground(QBrush(QColor("#ffffff")))
+                        else:
+                            item = QTableWidgetItem("--")
+                            item.setBackground(QBrush(QColor("#2b2b2b")))
+                            item.setForeground(QBrush(QColor("#888888")))
 
-                self.correlation_table.setItem(i, j, item)
+                    # Center align
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+
+                    # Make read-only
+                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+
+                    self.correlation_table.setItem(i, j, item)
 
     def on_refresh_requested(self):
         """Handle refresh request"""
