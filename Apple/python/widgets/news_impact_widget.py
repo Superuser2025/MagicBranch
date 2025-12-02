@@ -13,6 +13,7 @@ from datetime import datetime
 
 from widgets.news_impact_predictor import (news_impact_predictor, NewsEvent,
                                           ImpactLevel)
+from widgets.calendar_fetcher import calendar_fetcher
 
 
 class NewsEventListItem(QWidget):
@@ -148,7 +149,7 @@ class NewsImpactWidget(QWidget):
 
         # Refresh button
         self.refresh_btn = QPushButton("🔄 Refresh")
-        self.refresh_btn.clicked.connect(self.refresh_display)
+        self.refresh_btn.clicked.connect(self.reload_calendar_data)
         self.refresh_btn.setMaximumWidth(100)
         header_layout.addWidget(self.refresh_btn)
 
@@ -282,11 +283,40 @@ class NewsImpactWidget(QWidget):
         """)
 
     def load_sample_data(self):
-        """Load sample news events for demonstration"""
+        """Load real news events from calendar sources"""
+        from datetime import timedelta
+
+        # Fetch real calendar events
+        try:
+            real_events = calendar_fetcher.fetch_events(days_ahead=7)
+
+            if real_events:
+                # Clear old events
+                news_impact_predictor.events = []
+
+                # Add each event to the predictor (this enriches them with historical data)
+                for event in real_events:
+                    news_impact_predictor.add_event(event)
+
+                self.status_label.setText(f"Loaded {len(real_events)} real events from calendar")
+            else:
+                # Fallback to sample data if no real events available
+                self._load_fallback_sample_data()
+                self.status_label.setText("Using sample data (no calendar source available)")
+
+        except Exception as e:
+            # If fetching fails, use fallback sample data
+            self._load_fallback_sample_data()
+            self.status_label.setText(f"Using sample data (fetch failed: {str(e)[:30]})")
+
+        # Refresh display
+        self.refresh_display()
+
+    def _load_fallback_sample_data(self):
+        """Load fallback sample news events if real data unavailable"""
         from datetime import timedelta
 
         # Create sample news events using correct constructor
-        # NewsEvent(event_name, currency, timestamp, forecast, previous, actual)
         sample_events = []
 
         # Event 1: US Non-Farm Payrolls
@@ -350,10 +380,15 @@ class NewsImpactWidget(QWidget):
         sample_events.append(event5)
 
         # Add sample events to the predictor
-        news_impact_predictor.upcoming_events = sample_events
+        news_impact_predictor.events = sample_events
 
-        # Refresh display
-        self.refresh_display()
+    def reload_calendar_data(self):
+        """Reload calendar data from source"""
+        self.refresh_btn.setEnabled(False)
+        self.refresh_btn.setText("Loading...")
+        self.load_sample_data()
+        self.refresh_btn.setText("🔄 Refresh")
+        self.refresh_btn.setEnabled(True)
 
     def refresh_display(self):
         """Refresh the display with current data"""
