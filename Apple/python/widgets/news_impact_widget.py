@@ -281,6 +281,65 @@ class NewsImpactWidget(QWidget):
             }
         """)
 
+    def load_sample_data(self):
+        """Load sample news events for demonstration"""
+        from datetime import timedelta
+
+        # Create sample news events
+        sample_events = [
+            NewsEvent(
+                event_name='US Non-Farm Payrolls',
+                currency='USD',
+                impact_level=ImpactLevel.EXTREME,
+                timestamp=datetime.now() + timedelta(hours=2),
+                forecast='185K',
+                previous='180K',
+                avg_pip_impact=120
+            ),
+            NewsEvent(
+                event_name='ECB Interest Rate Decision',
+                currency='EUR',
+                impact_level=ImpactLevel.EXTREME,
+                timestamp=datetime.now() + timedelta(hours=6),
+                forecast='4.50%',
+                previous='4.50%',
+                avg_pip_impact=95
+            ),
+            NewsEvent(
+                event_name='UK GDP Growth Rate',
+                currency='GBP',
+                impact_level=ImpactLevel.HIGH,
+                timestamp=datetime.now() + timedelta(hours=8),
+                forecast='0.3%',
+                previous='0.2%',
+                avg_pip_impact=55
+            ),
+            NewsEvent(
+                event_name='US Consumer Confidence',
+                currency='USD',
+                impact_level=ImpactLevel.MEDIUM,
+                timestamp=datetime.now() + timedelta(hours=12),
+                forecast='102.5',
+                previous='101.3',
+                avg_pip_impact=35
+            ),
+            NewsEvent(
+                event_name='JPY Manufacturing PMI',
+                currency='JPY',
+                impact_level=ImpactLevel.LOW,
+                timestamp=datetime.now() + timedelta(hours=18),
+                forecast='49.8',
+                previous='49.5',
+                avg_pip_impact=18
+            )
+        ]
+
+        # Add sample events to the predictor
+        news_impact_predictor.upcoming_events = sample_events
+
+        # Refresh display
+        self.refresh_display()
+
     def refresh_display(self):
         """Refresh the display with current data"""
         # Get upcoming events
