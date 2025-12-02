@@ -58,6 +58,7 @@ class PatternScorerWidget(QWidget):
         self.current_score: PatternScore = None
 
         self.init_ui()
+        self.load_sample_data()
 
     def init_ui(self):
         """Initialize user interface"""
@@ -341,6 +342,26 @@ class PatternScorerWidget(QWidget):
         layout.addWidget(self.historical_label)
 
         return frame
+
+    def load_sample_data(self):
+        """Load sample pattern score for demonstration"""
+        # Create a high-quality pattern score example
+        sample_score = pattern_scorer.score_pattern(
+            pattern_type="Bullish Order Block",
+            price_level=1.10000,
+            at_fvg=True,
+            at_order_block=True,
+            at_liquidity=True,
+            volume_ratio=2.5,
+            after_sweep=True,
+            mtf_h4_aligned=True,
+            mtf_h1_aligned=True,
+            mtf_m15_aligned=True,
+            in_session="LONDON",
+            with_structure=True,
+            swing_level=True
+        )
+        self.update_score(sample_score)
 
     def update_score(self, score: PatternScore):
         """Update display with new pattern score"""

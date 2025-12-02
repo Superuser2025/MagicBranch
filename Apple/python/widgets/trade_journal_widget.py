@@ -31,6 +31,9 @@ class TradeJournalWidget(QWidget):
         super().__init__(parent)
         self.init_ui()
 
+        # Load sample data for demonstration
+        self.load_sample_data()
+
         # Auto-refresh every 5 seconds
         self.refresh_timer = QTimer()
         self.refresh_timer.timeout.connect(self.refresh_display)
@@ -319,6 +322,37 @@ class TradeJournalWidget(QWidget):
                 background-color: #3a3a3a;
             }
         """)
+
+    def load_sample_data(self):
+        """Load sample trades for demonstration"""
+        from datetime import timedelta
+
+        # Add 12 sample journal entries over the last 7 days
+        base_time = datetime.now() - timedelta(days=7)
+
+        sample_trades = [
+            ('EURUSD', TradeSetupType.BULLISH_OB, 'BUY', 1.10000, 1.10200, 1.09800, 1.10300, 0.1, 200, 20, 2.0),
+            ('GBPUSD', TradeSetupType.FVG_LONG, 'BUY', 1.26500, 1.26650, 1.26350, 1.26800, 0.1, 150, 15, 1.5),
+            ('USDJPY', TradeSetupType.LIQUIDITY_SWEEP, 'BUY', 148.500, 148.700, 148.300, 148.900, 0.1, 200, 20, 2.0),
+            ('EURUSD', TradeSetupType.BEARISH_OB, 'SELL', 1.10200, 1.10350, 1.09900, 1.10400, 0.1, -150, -15, -1.5),  # Loss
+            ('AUDUSD', TradeSetupType.TREND_CONTINUATION, 'BUY', 0.66000, 0.66120, 0.65900, 0.66200, 0.1, 120, 12, 1.2),
+            ('EURUSD', TradeSetupType.BULLISH_OB, 'BUY', 1.10100, 1.10280, 1.09900, 1.10400, 0.1, 180, 18, 1.8),
+            ('GBPUSD', TradeSetupType.FVG_SHORT, 'SELL', 1.26300, 1.26250, 1.26100, 1.26450, 0.1, -50, -5, -0.5),  # Loss
+            ('USDJPY', TradeSetupType.REVERSAL, 'SELL', 149.000, 148.800, 148.600, 149.200, 0.1, 200, 20, 2.0),
+            ('EURUSD', TradeSetupType.BULLISH_OB, 'BUY', 1.10050, 1.10200, 1.09850, 1.10350, 0.1, 150, 15, 1.5),
+            ('NZDUSD', TradeSetupType.BREAKOUT, 'BUY', 0.61000, 0.61080, 0.60920, 0.61180, 0.1, 80, 8, 0.8),
+            ('EURUSD', TradeSetupType.FVG_SHORT, 'SELL', 1.10300, 1.10450, 1.10050, 1.10550, 0.1, -150, -15, -1.5),  # Loss
+            ('GBPUSD', TradeSetupType.TREND_CONTINUATION, 'BUY', 1.26400, 1.26550, 1.26250, 1.26700, 0.1, 150, 15, 1.5),
+        ]
+
+        for i, (symbol, setup, direction, entry, exit, sl, tp, lots, profit, pips, r_mult) in enumerate(sample_trades):
+            entry_time = base_time + timedelta(hours=i*12)
+            exit_time = entry_time + timedelta(hours=3)
+
+            trade_journal.add_trade(
+                symbol, setup, direction, entry, exit, sl, tp, lots,
+                entry_time, exit_time, profit, pips, r_mult
+            )
 
     def refresh_display(self):
         """Refresh all displays with current data"""

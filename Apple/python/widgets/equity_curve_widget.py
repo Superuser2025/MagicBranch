@@ -94,6 +94,9 @@ class EquityCurveWidget(QWidget):
         super().__init__(parent)
         self.init_ui()
 
+        # Load sample data for demonstration
+        self.load_sample_data()
+
         # Auto-refresh every 2 seconds
         self.refresh_timer = QTimer()
         self.refresh_timer.timeout.connect(self.refresh_display)
@@ -299,6 +302,40 @@ class EquityCurveWidget(QWidget):
                 border-radius: 2px;
             }
         """)
+
+    def load_sample_data(self):
+        """Load sample trades for demonstration"""
+        from datetime import timedelta
+
+        # Add 15 sample trades over the last 10 days
+        base_time = datetime.now() - timedelta(days=10)
+
+        sample_trades = [
+            ('EURUSD', 'BUY', 1.10000, 1.10150, 0.1, 150, 15),
+            ('GBPUSD', 'SELL', 1.26500, 1.26400, 0.1, 100, 10),
+            ('USDJPY', 'BUY', 148.500, 148.700, 0.1, 200, 20),
+            ('EURUSD', 'SELL', 1.10200, 1.10350, 0.1, -150, -15),  # Loss
+            ('AUDUSD', 'BUY', 0.66000, 0.66120, 0.1, 120, 12),
+            ('EURUSD', 'BUY', 1.10100, 1.10280, 0.1, 180, 18),
+            ('GBPUSD', 'BUY', 1.26300, 1.26250, 0.1, -50, -5),  # Loss
+            ('USDJPY', 'SELL', 149.000, 148.800, 0.1, 200, 20),
+            ('EURUSD', 'BUY', 1.10050, 1.10200, 0.1, 150, 15),
+            ('NZDUSD', 'BUY', 0.61000, 0.61080, 0.1, 80, 8),
+            ('EURUSD', 'SELL', 1.10300, 1.10450, 0.1, -150, -15),  # Loss
+            ('GBPUSD', 'BUY', 1.26400, 1.26550, 0.1, 150, 15),
+            ('EURUSD', 'BUY', 1.10150, 1.10320, 0.1, 170, 17),
+            ('USDJPY', 'BUY', 148.800, 149.000, 0.1, 200, 20),
+            ('EURUSD', 'BUY', 1.10200, 1.10380, 0.1, 180, 18),
+        ]
+
+        for i, (symbol, direction, entry, exit, lots, profit, pips) in enumerate(sample_trades):
+            entry_time = base_time + timedelta(hours=i*6)
+            exit_time = entry_time + timedelta(hours=2)
+
+            equity_curve_analyzer.add_trade(
+                symbol, direction, entry, exit, lots,
+                entry_time, exit_time, profit, pips
+            )
 
     def refresh_display(self):
         """Refresh all displays with current data"""

@@ -115,6 +115,7 @@ class RiskRewardWidget(QWidget):
         super().__init__(parent)
         self.current_analysis = None
         self.init_ui()
+        self.load_sample_data()
 
     def init_ui(self):
         """Initialize the user interface"""
@@ -275,6 +276,23 @@ class RiskRewardWidget(QWidget):
                 color: #000000;
             }
         """)
+
+    def load_sample_data(self):
+        """Load sample structure levels and calculate TPs for demonstration"""
+        # Sample structure levels for EURUSD
+        sample_structure = {
+            'support': [1.09200, 1.08850, 1.08500],
+            'resistance': [1.10500, 1.10800, 1.11200, 1.11650]
+        }
+        self.set_structure_levels(sample_structure)
+
+        # Set sample entry and SL
+        self.entry_input.setValue(1.10000)
+        self.sl_input.setValue(1.09500)
+        self.set_direction('BUY')
+
+        # Auto-calculate to show sample data
+        self.calculate_tps()
 
     def set_structure_levels(self, structure_levels: Dict):
         """
