@@ -398,6 +398,16 @@ class InstitutionalOrderFlowWidget(QWidget):
             ),
             InstitutionalOrder(
                 symbol='GBPUSD',
+                timestamp=datetime.now() - timedelta(minutes=8),
+                price=1.31855,  # Close to first order - will form cluster
+                direction='BUY',
+                volume_multiplier=3.2,
+                pip_move=32.0,
+                order_type='accumulation',
+                confidence=90
+            ),
+            InstitutionalOrder(
+                symbol='GBPUSD',
                 timestamp=datetime.now() - timedelta(minutes=12),
                 price=1.32120,
                 direction='SELL',
@@ -405,6 +415,16 @@ class InstitutionalOrderFlowWidget(QWidget):
                 pip_move=22.0,
                 order_type='sweep',
                 confidence=88
+            ),
+            InstitutionalOrder(
+                symbol='GBPUSD',
+                timestamp=datetime.now() - timedelta(minutes=15),
+                price=1.32118,  # Close to previous SELL - will form cluster
+                direction='SELL',
+                volume_multiplier=2.1,
+                pip_move=24.0,
+                order_type='absorption',
+                confidence=87
             ),
             InstitutionalOrder(
                 symbol='GBPUSD',
@@ -425,6 +445,16 @@ class InstitutionalOrderFlowWidget(QWidget):
                 pip_move=25.0,
                 order_type='absorption',
                 confidence=85
+            ),
+            InstitutionalOrder(
+                symbol='EURUSD',
+                timestamp=datetime.now() - timedelta(minutes=28),
+                price=1.16122,  # Close to previous EURUSD - will form cluster
+                direction='SELL',
+                volume_multiplier=2.8,
+                pip_move=30.0,
+                order_type='sweep',
+                confidence=89
             )
         ]
 
