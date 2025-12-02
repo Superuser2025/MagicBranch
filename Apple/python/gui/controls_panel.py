@@ -85,9 +85,9 @@ class ControlsPanel(QWidget):
     def __init__(self):
         super().__init__()
 
-        # Lock states to prevent accidental changes
-        self.speed_locked = True
-        self.risk_locked = True
+        # Lock states - start unlocked for better UX
+        self.speed_locked = False  # Unlocked by default so users can change speed
+        self.risk_locked = True    # Risk stays locked for safety
 
         self.init_ui()
 
@@ -322,9 +322,9 @@ class ControlsPanel(QWidget):
         title_layout.addStretch()
 
         # Lock button
-        self.speed_lock_btn = QPushButton("🔒")
+        self.speed_lock_btn = QPushButton("🔓")  # Start unlocked
         self.speed_lock_btn.setCheckable(True)
-        self.speed_lock_btn.setChecked(True)
+        self.speed_lock_btn.setChecked(False)  # Start unchecked (unlocked)
         self.speed_lock_btn.setFixedSize(30, 30)
         self.speed_lock_btn.clicked.connect(self.toggle_speed_lock)
         self.speed_lock_btn.setStyleSheet(f"""
@@ -352,7 +352,7 @@ class ControlsPanel(QWidget):
             config = UPDATE_SPEED_CONFIGS[speed_name]
             self.speed_combo.addItem(config['description'], speed_name)
 
-        self.speed_combo.setEnabled(False)  # Start locked
+        self.speed_combo.setEnabled(True)  # Start unlocked for easy access
         self.speed_combo.currentIndexChanged.connect(self.on_speed_changed)
         self.speed_combo.setStyleSheet(f"""
             QComboBox {{

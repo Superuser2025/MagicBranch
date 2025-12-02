@@ -384,9 +384,31 @@ class MainWindow(QMainWindow):
         print(f"[Main Window] Setting changed: {setting_name} = {value}")
         self.status_label.setText(f"Setting updated: {setting_name}")
 
-        # Update widgets based on setting changes
-        # For example, if filters change, we could refresh the opportunity scanner
-        if setting_name in ['use_fvg_filter', 'use_ob_filter', 'use_liquidity_filter']:
+        # Handle update speed changes
+        if setting_name == 'update_speed':
+            # Map speed to milliseconds
+            speed_intervals = {
+                'SLOW': 5000,      # 5 seconds
+                'NORMAL': 2000,    # 2 seconds
+                'FAST': 1000,      # 1 second
+                'REALTIME': 500    # 0.5 seconds
+            }
+
+            interval = speed_intervals.get(value, 1000)
+
+            # Update chart refresh timer
+            if hasattr(self, 'chart_panel') and hasattr(self.chart_panel, 'update_timer'):
+                self.chart_panel.update_timer.setInterval(interval)
+                print(f"[Main Window] Chart refresh rate changed to {interval}ms ({value})")
+                self.status_label.setText(f"Chart refresh: {interval/1000}s")
+
+            # Update main window timer
+            if hasattr(self, 'data_timer'):
+                self.data_timer.setInterval(interval)
+                print(f"[Main Window] Data update rate changed to {interval}ms ({value})")
+
+        # Handle filter changes
+        elif setting_name in ['use_fvg_filter', 'use_ob_filter', 'use_liquidity_filter']:
             if hasattr(self, 'scanner_widget'):
                 # Trigger a rescan with new filters
                 self.scanner_widget.scan_market()
