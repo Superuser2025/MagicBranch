@@ -315,21 +315,24 @@ class MTFStructureWidget(QWidget):
                     'type': 'SUPPORT',
                     'timeframes': ['H4', 'D1'],
                     'strength': 850,
-                    'distance_pips': 23.0
+                    'distance_pips': 23.0,
+                    'level_count': 2
                 },
                 {
                     'price': 1.16320,
                     'type': 'RESISTANCE',
                     'timeframes': ['D1', 'W1'],
                     'strength': 920,
-                    'distance_pips': 24.0
+                    'distance_pips': 24.0,
+                    'level_count': 2
                 },
                 {
                     'price': 1.15500,
                     'type': 'SUPPORT',
                     'timeframes': ['W1', 'D1', 'H4'],
                     'strength': 950,
-                    'distance_pips': 58.0
+                    'distance_pips': 58.0,
+                    'level_count': 3
                 }
             ],
             'last_update': datetime.now()
