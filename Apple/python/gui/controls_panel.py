@@ -85,6 +85,10 @@ class ControlsPanel(QWidget):
     def __init__(self):
         super().__init__()
 
+        # Lock states to prevent accidental changes
+        self.speed_locked = True
+        self.risk_locked = True
+
         self.init_ui()
 
     def init_ui(self):
@@ -103,6 +107,11 @@ class ControlsPanel(QWidget):
 
         # Container widget
         container = QWidget()
+        container.setStyleSheet(f"""
+            QWidget {{
+                background-color: {settings.theme.background};
+            }}
+        """)
         layout = QVBoxLayout(container)
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(16)
@@ -110,7 +119,7 @@ class ControlsPanel(QWidget):
         # ============================================================
         # HEADER
         # ============================================================
-        header = QLabel("⚙️ CONTROLS")
+        header = QLabel("⚙️ Settings")
         header.setStyleSheet(f"""
             QLabel {{
                 color: {settings.theme.text_primary};
@@ -296,7 +305,9 @@ class ControlsPanel(QWidget):
         layout = QVBoxLayout(frame)
         layout.setSpacing(12)
 
-        # Title
+        # Title with lock button
+        title_layout = QHBoxLayout()
+
         title = QLabel("⚡ Update Speed")
         title.setStyleSheet(f"""
             QLabel {{
@@ -307,7 +318,33 @@ class ControlsPanel(QWidget):
                 border: none;
             }}
         """)
-        layout.addWidget(title)
+        title_layout.addWidget(title)
+        title_layout.addStretch()
+
+        # Lock button
+        self.speed_lock_btn = QPushButton("🔒")
+        self.speed_lock_btn.setCheckable(True)
+        self.speed_lock_btn.setChecked(True)
+        self.speed_lock_btn.setFixedSize(30, 30)
+        self.speed_lock_btn.clicked.connect(self.toggle_speed_lock)
+        self.speed_lock_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {settings.theme.danger};
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 14px;
+            }}
+            QPushButton:checked {{
+                background-color: {settings.theme.danger};
+            }}
+            QPushButton:!checked {{
+                background-color: {settings.theme.success};
+            }}
+        """)
+        title_layout.addWidget(self.speed_lock_btn)
+
+        layout.addLayout(title_layout)
 
         # Speed selector
         self.speed_combo = QComboBox()
@@ -315,6 +352,7 @@ class ControlsPanel(QWidget):
             config = UPDATE_SPEED_CONFIGS[speed_name]
             self.speed_combo.addItem(config['description'], speed_name)
 
+        self.speed_combo.setEnabled(False)  # Start locked
         self.speed_combo.currentIndexChanged.connect(self.on_speed_changed)
         self.speed_combo.setStyleSheet(f"""
             QComboBox {{
@@ -434,7 +472,9 @@ class ControlsPanel(QWidget):
         layout = QVBoxLayout(frame)
         layout.setSpacing(12)
 
-        # Title
+        # Title with lock button
+        title_layout = QHBoxLayout()
+
         title = QLabel("💰 Risk Management")
         title.setStyleSheet(f"""
             QLabel {{
@@ -445,7 +485,33 @@ class ControlsPanel(QWidget):
                 border: none;
             }}
         """)
-        layout.addWidget(title)
+        title_layout.addWidget(title)
+        title_layout.addStretch()
+
+        # Lock button
+        self.risk_lock_btn = QPushButton("🔒")
+        self.risk_lock_btn.setCheckable(True)
+        self.risk_lock_btn.setChecked(True)
+        self.risk_lock_btn.setFixedSize(30, 30)
+        self.risk_lock_btn.clicked.connect(self.toggle_risk_lock)
+        self.risk_lock_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {settings.theme.danger};
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 14px;
+            }}
+            QPushButton:checked {{
+                background-color: {settings.theme.danger};
+            }}
+            QPushButton:!checked {{
+                background-color: {settings.theme.success};
+            }}
+        """)
+        title_layout.addWidget(self.risk_lock_btn)
+
+        layout.addLayout(title_layout)
 
         # Risk per trade slider
         risk_layout = QVBoxLayout()
@@ -466,6 +532,7 @@ class ControlsPanel(QWidget):
         self.risk_slider = QSlider(Qt.Orientation.Horizontal)
         self.risk_slider.setRange(10, 200)  # 0.1% to 2.0% (stored as int * 10)
         self.risk_slider.setValue(int(settings.trading.default_risk_percent * 10))
+        self.risk_slider.setEnabled(False)  # Start locked
         self.risk_slider.valueChanged.connect(self.on_risk_changed)
         self.risk_slider.setStyleSheet(f"""
             QSlider::groove:horizontal {{
@@ -845,3 +912,29 @@ class ControlsPanel(QWidget):
 
         # Emit signal for any local listeners
         self.setting_changed.emit(filter_name, enabled)
+
+    def toggle_speed_lock(self):
+        """Toggle lock state for Update Speed control"""
+        is_locked = self.speed_lock_btn.isChecked()
+        self.speed_locked = is_locked
+        self.speed_combo.setEnabled(not is_locked)
+
+        if is_locked:
+            self.speed_lock_btn.setText("🔒")
+            self._log_status("✓ Update Speed LOCKED")
+        else:
+            self.speed_lock_btn.setText("🔓")
+            self._log_status("✓ Update Speed UNLOCKED")
+
+    def toggle_risk_lock(self):
+        """Toggle lock state for Risk slider"""
+        is_locked = self.risk_lock_btn.isChecked()
+        self.risk_locked = is_locked
+        self.risk_slider.setEnabled(not is_locked)
+
+        if is_locked:
+            self.risk_lock_btn.setText("🔒")
+            self._log_status("✓ Risk slider LOCKED")
+        else:
+            self.risk_lock_btn.setText("🔓")
+            self._log_status("✓ Risk slider UNLOCKED")

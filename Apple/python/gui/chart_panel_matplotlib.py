@@ -157,9 +157,21 @@ class ChartPanel(QWidget):
                 border: 1px solid {settings.theme.border_color};
                 border-radius: 6px;
                 padding: 8px 12px;
+                padding-right: 30px;
                 min-width: 100px;
                 font-size: {settings.theme.font_size_md}px;
                 font-weight: 600;
+            }}
+            QComboBox::drop-down {{
+                border: none;
+                width: 20px;
+            }}
+            QComboBox::down-arrow {{
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 6px solid {settings.theme.text_secondary};
+                margin-right: 5px;
             }}
             QComboBox:hover {{
                 border-color: {settings.theme.accent};
@@ -199,9 +211,21 @@ class ChartPanel(QWidget):
                 border: 1px solid {settings.theme.border_color};
                 border-radius: 6px;
                 padding: 8px 12px;
+                padding-right: 30px;
                 min-width: 80px;
                 font-size: {settings.theme.font_size_md}px;
                 font-weight: 600;
+            }}
+            QComboBox::drop-down {{
+                border: none;
+                width: 20px;
+            }}
+            QComboBox::down-arrow {{
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 6px solid {settings.theme.text_secondary};
+                margin-right: 5px;
             }}
             QComboBox:hover {{
                 border-color: {settings.theme.accent};
@@ -417,10 +441,10 @@ class ChartPanel(QWidget):
                     ts = timestamps[i]
                     # Format timestamp as readable time
                     dt = datetime.fromtimestamp(ts)
-                    # For intraday: show time (HH:MM)
-                    # For daily: show date (MM/DD)
+                    # For intraday: show date and time (MM/DD HH:MM)
+                    # For daily: show date only (MM/DD)
                     if self.current_timeframe in ['M1', 'M5', 'M15', 'M30', 'H1', 'H4']:
-                        label = dt.strftime('%H:%M')
+                        label = dt.strftime('%m/%d\n%H:%M')
                     else:
                         label = dt.strftime('%m/%d')
                     tick_labels.append(label)
@@ -441,6 +465,9 @@ class ChartPanel(QWidget):
 
         # Draw institutional overlays (FVG, OB, Liquidity)
         self.draw_chart_overlays()
+
+        # Draw candlestick patterns
+        self.draw_candlestick_patterns()
 
         # Adjust layout with proper margins
         try:
@@ -477,6 +504,100 @@ class ChartPanel(QWidget):
 
         except Exception as e:
             pass
+
+    def draw_candlestick_patterns(self):
+        """Detect and draw candlestick patterns on chart"""
+        if not self.candle_data or len(self.candle_data) < 3:
+            return
+
+        try:
+            # Analyze last 20 candles for patterns
+            num_candles = min(20, len(self.candle_data))
+            start_idx = len(self.candle_data) - num_candles
+
+            for i in range(start_idx, len(self.candle_data)):
+                pattern = self.detect_pattern_at_index(i)
+                if pattern:
+                    # Draw pattern annotation
+                    candle = self.candle_data[i]
+                    y_pos = candle['high'] + (candle['high'] - candle['low']) * 0.3
+
+                    # Color based on pattern type
+                    if 'BULLISH' in pattern or 'HAMMER' in pattern or 'ENGULF' in pattern and i > start_idx:
+                        color = '#10B981'  # Green
+                        marker = '▲'
+                    elif 'BEARISH' in pattern or 'STAR' in pattern:
+                        color = '#EF4444'  # Red
+                        marker = '▼'
+                    else:
+                        color = '#F59E0B'  # Orange
+                        marker = '●'
+
+                    # Add pattern marker
+                    self.canvas.axes.plot(i, y_pos, marker=marker, color=color, markersize=8, zorder=100)
+
+                    # Add pattern label
+                    self.canvas.axes.text(
+                        i, y_pos + (candle['high'] - candle['low']) * 0.2,
+                        pattern,
+                        fontsize=7,
+                        color=color,
+                        weight='bold',
+                        ha='center',
+                        rotation=0,
+                        bbox=dict(boxstyle='round,pad=0.3', facecolor='#0A0E27', edgecolor=color, alpha=0.95)
+                    )
+
+        except Exception as e:
+            pass
+
+    def detect_pattern_at_index(self, idx):
+        """Detect candlestick pattern at given index"""
+        if idx < 2 or idx >= len(self.candle_data):
+            return None
+
+        current = self.candle_data[idx]
+        prev1 = self.candle_data[idx - 1]
+        prev2 = self.candle_data[idx - 2] if idx >= 2 else None
+
+        # Calculate candle properties
+        body = abs(current['close'] - current['open'])
+        upper_wick = current['high'] - max(current['open'], current['close'])
+        lower_wick = min(current['open'], current['close']) - current['low']
+        total_range = current['high'] - current['low']
+
+        is_bullish = current['close'] > current['open']
+        is_bearish = current['close'] < current['open']
+
+        # Engulfing patterns
+        if prev1 and body > 0 and total_range > 0:
+            prev_body = abs(prev1['close'] - prev1['open'])
+            if is_bullish and prev1['close'] < prev1['open']:
+                if current['close'] > prev1['open'] and current['open'] < prev1['close']:
+                    if body > prev_body * 1.3:
+                        return "BULLISH ENGULF"
+            elif is_bearish and prev1['close'] > prev1['open']:
+                if current['close'] < prev1['open'] and current['open'] > prev1['close']:
+                    if body > prev_body * 1.3:
+                        return "BEARISH ENGULF"
+
+        # Hammer / Shooting Star
+        if total_range > 0:
+            body_ratio = body / total_range
+            upper_wick_ratio = upper_wick / total_range
+            lower_wick_ratio = lower_wick / total_range
+
+            if body_ratio < 0.3:  # Small body
+                if lower_wick_ratio > 0.6 and upper_wick_ratio < 0.1:
+                    return "HAMMER"
+                elif upper_wick_ratio > 0.6 and lower_wick_ratio < 0.1:
+                    return "SHOOT STAR"
+
+        # Doji
+        if total_range > 0 and body / total_range < 0.1:
+            return "DOJI"
+
+        return None
 
     def draw_chart_overlays(self):
         """Draw FVG/OB/Liquidity zones on chart from REAL EA data"""
