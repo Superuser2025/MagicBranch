@@ -18,6 +18,7 @@ class OpportunityCard(QFrame):
     def __init__(self, opportunity: Dict, parent=None):
         super().__init__(parent)
         self.opportunity = opportunity
+        self.setObjectName("OpportunityCard")  # Set object name for specific styling
         self.init_ui()
 
     def init_ui(self):
@@ -138,6 +139,7 @@ class OpportunityScannerWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setObjectName("OpportunityScannerWidget")
 
         self.opportunities = []
         self.pairs_to_scan = [
@@ -152,8 +154,8 @@ class OpportunityScannerWidget(QWidget):
         self.scan_timer.timeout.connect(self.scan_market)
         self.scan_timer.start(10000)
 
-        # Initial scan
-        self.scan_market()
+        # Initial scan - delayed to ensure UI is fully initialized
+        QTimer.singleShot(100, self.scan_market)
 
     def init_ui(self):
         """Initialize the user interface"""
@@ -206,6 +208,7 @@ class OpportunityScannerWidget(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setMinimumHeight(120)  # Ensure minimum height for displaying cards
         scroll.setStyleSheet("""
             QScrollArea {
                 background-color: transparent;
@@ -217,9 +220,10 @@ class OpportunityScannerWidget(QWidget):
         self.grid_layout = QGridLayout(scroll_content)
         self.grid_layout.setSpacing(10)
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
         scroll.setWidget(scroll_content)
-        layout.addWidget(scroll)
+        layout.addWidget(scroll, 1)  # Give it stretch factor to expand
 
         # Apply dark theme
         self.apply_dark_theme()
@@ -227,24 +231,33 @@ class OpportunityScannerWidget(QWidget):
     def apply_dark_theme(self):
         """Apply dark theme styling"""
         self.setStyleSheet("""
-            QWidget {
+            OpportunityScannerWidget {
                 background-color: #0A0E27;
                 color: #F8FAFC;
+            }
+            QLabel {
+                background-color: transparent;
+            }
+            QScrollArea {
+                background-color: transparent;
             }
         """)
 
     def scan_market(self):
         """Scan all pairs for trading opportunities"""
+        print(f"[DEBUG] scan_market() called at {datetime.now().strftime('%H:%M:%S')}")
         self.blink_status()
 
         # Generate opportunities (in real version, this would analyze actual market data)
         self.opportunities = self.generate_opportunities()
+        print(f"[DEBUG] Generated {len(self.opportunities)} opportunities")
 
         # Sort by quality score (highest first)
         self.opportunities.sort(key=lambda x: x['quality_score'], reverse=True)
 
         # Update display
         self.update_display()
+        print(f"[DEBUG] Display updated with {len(self.opportunities)} cards")
 
         # Update time
         self.time_label.setText(f"Updated: {datetime.now().strftime('%H:%M:%S')}")
@@ -318,25 +331,37 @@ class OpportunityScannerWidget(QWidget):
 
     def update_display(self):
         """Update the opportunities grid display"""
+        print(f"[DEBUG] update_display() called with {len(self.opportunities)} opportunities")
+
         # Clear existing cards
+        cleared_count = 0
         for i in reversed(range(self.grid_layout.count())):
             widget = self.grid_layout.itemAt(i).widget()
             if widget:
                 widget.deleteLater()
+                cleared_count += 1
+        print(f"[DEBUG] Cleared {cleared_count} existing widgets")
 
         # Add opportunity cards (4 per row)
         for idx, opp in enumerate(self.opportunities):
             card = OpportunityCard(opp)
             card.mousePressEvent = lambda event, o=opp: self.opportunity_selected.emit(o)
             card.setCursor(Qt.CursorShape.PointingHandCursor)
+            card.show()  # Explicitly show the card
 
             row = idx // 4
             col = idx % 4
             self.grid_layout.addWidget(card, row, col)
+            print(f"[DEBUG] Added card {idx} at row={row}, col={col}: {opp['symbol']} {opp['direction']}")
+
+        # Force layout update
+        self.grid_layout.update()
+        self.grid_layout.activate()
 
         # Update count
         count = len(self.opportunities)
         self.count_label.setText(f"{count} opportunit{'y' if count == 1 else 'ies'} found")
+        print(f"[DEBUG] Count label updated: {count} opportunities")
 
     def blink_status(self):
         """Blink the scanning status indicator"""
