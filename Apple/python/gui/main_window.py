@@ -91,42 +91,29 @@ class MainWindow(QMainWindow):
         self.apply_dark_theme()
 
     def create_toolbar(self) -> QHBoxLayout:
-        """Create top toolbar with symbol/timeframe selectors"""
+        """Create top toolbar"""
         layout = QHBoxLayout()
 
         # Title
-        title = QLabel("📊 AppleTrader Pro")
+        title = QLabel("📊 AppleTrader Pro - Institutional Trading Dashboard")
         title.setFont(QFont("Arial", 14, QFont.Weight.Bold))
         title.setStyleSheet("color: #00aaff;")
         layout.addWidget(title)
 
         layout.addStretch()
 
-        # Symbol selector
-        layout.addWidget(QLabel("Symbol:"))
-        self.symbol_combo = QComboBox()
-        self.symbol_combo.addItems([
-            "EURUSD", "GBPUSD", "USDJPY", "USDCHF", "AUDUSD",
-            "USDCAD", "NZDUSD", "EURGBP", "EURJPY", "GBPJPY"
-        ])
-        self.symbol_combo.currentTextChanged.connect(self.on_symbol_changed)
-        self.symbol_combo.setMinimumWidth(120)
-        layout.addWidget(self.symbol_combo)
-
-        # Timeframe selector
-        layout.addWidget(QLabel("Timeframe:"))
-        self.timeframe_combo = QComboBox()
-        self.timeframe_combo.addItems(["M15", "H1", "H4", "D1", "W1"])
-        self.timeframe_combo.setCurrentText("H4")
-        self.timeframe_combo.currentTextChanged.connect(self.on_timeframe_changed)
-        self.timeframe_combo.setMinimumWidth(80)
-        layout.addWidget(self.timeframe_combo)
+        # Time display
+        self.time_label = QLabel(datetime.now().strftime("%H:%M:%S"))
+        self.time_label.setFont(QFont("Arial", 10))
+        self.time_label.setStyleSheet("color: #94A3B8;")
+        layout.addWidget(self.time_label)
 
         layout.addSpacing(20)
 
-        # Connection status
-        self.connection_label = QLabel("🔴 Disconnected")
-        self.connection_label.setStyleSheet("color: #ff0000; font-weight: bold;")
+        # Connection status (clearer labeling)
+        self.connection_label = QLabel("🔴 MT5: Disconnected")
+        self.connection_label.setFont(QFont("Arial", 10, QFont.Weight.Bold))
+        self.connection_label.setStyleSheet("color: #EF4444; background-color: #1E293B; padding: 5px 10px; border-radius: 5px;")
         layout.addWidget(self.connection_label)
 
         return layout
@@ -296,8 +283,11 @@ class MainWindow(QMainWindow):
 
     def update_all_data(self):
         """Update all widgets with latest data"""
-        # This will be connected to MT5 connector
-        # For now, just update status
+        # Update time display in toolbar
+        if hasattr(self, 'time_label'):
+            self.time_label.setText(datetime.now().strftime("%H:%M:%S"))
+
+        # Update status bar
         self.status_bar.showMessage(f"Updated: {datetime.now().strftime('%H:%M:%S')}", 2000)
 
     def on_export(self):
