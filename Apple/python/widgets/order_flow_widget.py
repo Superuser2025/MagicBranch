@@ -428,8 +428,8 @@ class InstitutionalOrderFlowWidget(QWidget):
             )
         ]
 
-        # Add sample orders to the detector
-        order_flow_detector.recent_orders = sample_orders
+        # Add sample orders to the detector's order history
+        order_flow_detector.order_history.extend(sample_orders)
         self.current_symbol = 'GBPUSD'
 
         # Refresh display
