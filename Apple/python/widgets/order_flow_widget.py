@@ -324,11 +324,15 @@ class InstitutionalOrderFlowWidget(QWidget):
 
         # Update status
         stats = order_flow_detector.get_summary_stats()
-        if stats['last_scan']:
+        if stats.get('last_scan'):
             time_str = stats['last_scan'].strftime("%H:%M:%S")
             self.status_label.setText(
                 f"Last scan: {time_str} | "
                 f"{stats['total_orders']} total orders in history"
+            )
+        else:
+            self.status_label.setText(
+                f"{stats.get('total_orders', 0)} total orders in history"
             )
 
     def on_scan_requested(self):
