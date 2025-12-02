@@ -285,54 +285,69 @@ class NewsImpactWidget(QWidget):
         """Load sample news events for demonstration"""
         from datetime import timedelta
 
-        # Create sample news events
-        sample_events = [
-            NewsEvent(
-                event_name='US Non-Farm Payrolls',
-                currency='USD',
-                impact_level=ImpactLevel.EXTREME,
-                timestamp=datetime.now() + timedelta(hours=2),
-                forecast='185K',
-                previous='180K',
-                avg_pip_impact=120
-            ),
-            NewsEvent(
-                event_name='ECB Interest Rate Decision',
-                currency='EUR',
-                impact_level=ImpactLevel.EXTREME,
-                timestamp=datetime.now() + timedelta(hours=6),
-                forecast='4.50%',
-                previous='4.50%',
-                avg_pip_impact=95
-            ),
-            NewsEvent(
-                event_name='UK GDP Growth Rate',
-                currency='GBP',
-                impact_level=ImpactLevel.HIGH,
-                timestamp=datetime.now() + timedelta(hours=8),
-                forecast='0.3%',
-                previous='0.2%',
-                avg_pip_impact=55
-            ),
-            NewsEvent(
-                event_name='US Consumer Confidence',
-                currency='USD',
-                impact_level=ImpactLevel.MEDIUM,
-                timestamp=datetime.now() + timedelta(hours=12),
-                forecast='102.5',
-                previous='101.3',
-                avg_pip_impact=35
-            ),
-            NewsEvent(
-                event_name='JPY Manufacturing PMI',
-                currency='JPY',
-                impact_level=ImpactLevel.LOW,
-                timestamp=datetime.now() + timedelta(hours=18),
-                forecast='49.8',
-                previous='49.5',
-                avg_pip_impact=18
-            )
-        ]
+        # Create sample news events using correct constructor
+        # NewsEvent(event_name, currency, timestamp, forecast, previous, actual)
+        sample_events = []
+
+        # Event 1: US Non-Farm Payrolls
+        event1 = NewsEvent(
+            event_name='US Non-Farm Payrolls',
+            currency='USD',
+            timestamp=datetime.now() + timedelta(hours=2),
+            forecast=185.0,
+            previous=180.0
+        )
+        event1.avg_pip_impact = 120
+        event1.impact_level = ImpactLevel.EXTREME
+        sample_events.append(event1)
+
+        # Event 2: ECB Interest Rate Decision
+        event2 = NewsEvent(
+            event_name='ECB Interest Rate Decision',
+            currency='EUR',
+            timestamp=datetime.now() + timedelta(hours=6),
+            forecast=4.50,
+            previous=4.50
+        )
+        event2.avg_pip_impact = 95
+        event2.impact_level = ImpactLevel.EXTREME
+        sample_events.append(event2)
+
+        # Event 3: UK GDP Growth Rate
+        event3 = NewsEvent(
+            event_name='UK GDP Growth Rate',
+            currency='GBP',
+            timestamp=datetime.now() + timedelta(hours=8),
+            forecast=0.3,
+            previous=0.2
+        )
+        event3.avg_pip_impact = 55
+        event3.impact_level = ImpactLevel.HIGH
+        sample_events.append(event3)
+
+        # Event 4: US Consumer Confidence
+        event4 = NewsEvent(
+            event_name='US Consumer Confidence',
+            currency='USD',
+            timestamp=datetime.now() + timedelta(hours=12),
+            forecast=102.5,
+            previous=101.3
+        )
+        event4.avg_pip_impact = 35
+        event4.impact_level = ImpactLevel.MEDIUM
+        sample_events.append(event4)
+
+        # Event 5: JPY Manufacturing PMI
+        event5 = NewsEvent(
+            event_name='JPY Manufacturing PMI',
+            currency='JPY',
+            timestamp=datetime.now() + timedelta(hours=18),
+            forecast=49.8,
+            previous=49.5
+        )
+        event5.avg_pip_impact = 18
+        event5.impact_level = ImpactLevel.LOW
+        sample_events.append(event5)
 
         # Add sample events to the predictor
         news_impact_predictor.upcoming_events = sample_events
