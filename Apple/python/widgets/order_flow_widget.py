@@ -96,6 +96,7 @@ class InstitutionalOrderFlowWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.current_symbol = None
+        self.using_real_data = False  # Track if we're using real or demo data
         self.init_ui()
 
         # Auto-refresh every 3 seconds
@@ -103,7 +104,7 @@ class InstitutionalOrderFlowWidget(QWidget):
         self.refresh_timer.timeout.connect(self.refresh_display)
         self.refresh_timer.start(3000)
 
-        # Load sample order flow data
+        # Load sample order flow data (will be replaced when real data arrives)
         self.load_sample_data()
 
     def init_ui(self):
@@ -351,10 +352,19 @@ class InstitutionalOrderFlowWidget(QWidget):
         """
         self.current_symbol = symbol
 
-        # Run scan
+        # Mark that we're using real data now
+        if not self.using_real_data:
+            self.using_real_data = True
+            # Clear demo data from detector
+            order_flow_detector.order_history.clear()
+            print("[Order Flow] Switched from demo data to REAL MT5 data")
+
+        # Run scan on real data
         detected_orders = order_flow_detector.scan_for_orders(
             symbol, df, lookback
         )
+
+        print(f"[Order Flow] Detected {len(detected_orders)} institutional orders in real data")
 
         # Emit signals for new orders
         for order in detected_orders:

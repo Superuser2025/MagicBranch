@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QColor
 from datetime import datetime
-from typing import List, Dict
+from typing import List, Dict, Optional
 import random
 
 
@@ -151,6 +151,8 @@ class OpportunityScannerWidget(QWidget):
             'EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD',
             'NZDUSD', 'USDCHF', 'EURGBP', 'EURJPY', 'GBPJPY'
         ]
+        self.mt5_connector = None  # Will be set when MT5 connects
+        self.using_real_data = False
 
         self.init_ui()
 
@@ -255,14 +257,28 @@ class OpportunityScannerWidget(QWidget):
             }
         """)
 
+    def set_mt5_connector(self, mt5_connector):
+        """Set MT5 connector to use real market data"""
+        self.mt5_connector = mt5_connector
+        if not self.using_real_data:
+            self.using_real_data = True
+            print("[Opportunity Scanner] Switched from demo data to REAL MT5 data")
+            # Trigger immediate scan with real data
+            self.scan_market()
+
     def scan_market(self):
         """Scan all pairs for trading opportunities"""
         print(f"[DEBUG] scan_market() called at {datetime.now().strftime('%H:%M:%S')}")
         self.blink_status()
 
-        # Generate opportunities (in real version, this would analyze actual market data)
-        self.opportunities = self.generate_opportunities()
-        print(f"[DEBUG] Generated {len(self.opportunities)} opportunities")
+        # Use real data if MT5 is connected, otherwise use demo data
+        if self.using_real_data and self.mt5_connector:
+            self.opportunities = self.scan_real_market_data()
+            print(f"[DEBUG] Scanned REAL data: {len(self.opportunities)} opportunities found")
+        else:
+            # Generate demo opportunities
+            self.opportunities = self.generate_opportunities()
+            print(f"[DEBUG] Generated {len(self.opportunities)} DEMO opportunities")
 
         # Sort by quality score (highest first)
         self.opportunities.sort(key=lambda x: x['quality_score'], reverse=True)
@@ -340,6 +356,109 @@ class OpportunityScannerWidget(QWidget):
             'GBPJPY': 197.00
         }
         return base_prices.get(pair, 1.0000)
+
+    def scan_real_market_data(self) -> List[Dict]:
+        """Scan real market data from MT5 for trading opportunities"""
+        opportunities = []
+
+        # Scan top pairs for opportunities
+        timeframes = ['H1', 'H4']  # Focus on these timeframes
+
+        for pair in self.pairs_to_scan[:5]:  # Scan top 5 pairs to avoid overload
+            for timeframe in timeframes:
+                # Get candle data from MT5
+                df = self.mt5_connector.get_candles(pair, timeframe, 100)
+
+                if df is None or len(df) < 50:
+                    continue
+
+                # Analyze for trading opportunity
+                opp = self.analyze_opportunity(pair, timeframe, df)
+                if opp:
+                    opportunities.append(opp)
+
+        return opportunities
+
+    def analyze_opportunity(self, symbol: str, timeframe: str, df) -> Optional[Dict]:
+        """Analyze candle data for a trading opportunity"""
+        try:
+            # Get current and recent prices
+            current_close = df['close'].iloc[-1]
+            current_high = df['high'].iloc[-1]
+            current_low = df['low'].iloc[-1]
+
+            # Calculate simple trend (20-period SMA)
+            if len(df) >= 20:
+                sma_20 = df['close'].tail(20).mean()
+                trend = 'BUY' if current_close > sma_20 else 'SELL'
+            else:
+                return None
+
+            # Calculate volatility (ATR-like)
+            df['hl'] = df['high'] - df['low']
+            atr = df['hl'].tail(14).mean()
+
+            # Set entry/SL/TP based on trend
+            if trend == 'BUY':
+                entry = current_close
+                stop_loss = entry - (atr * 1.5)
+                take_profit = entry + (atr * 3.0)
+            else:  # SELL
+                entry = current_close
+                stop_loss = entry + (atr * 1.5)
+                take_profit = entry - (atr * 3.0)
+
+            # Calculate risk:reward
+            risk = abs(entry - stop_loss)
+            reward = abs(take_profit - entry)
+            rr = reward / risk if risk > 0 else 0
+
+            # Calculate quality score based on conditions
+            quality_score = 60
+            reasons = []
+
+            # Check for volume spike
+            if 'volume' in df.columns and len(df) >= 20:
+                avg_volume = df['volume'].tail(20).mean()
+                current_volume = df['volume'].iloc[-1]
+                if current_volume > avg_volume * 1.5:
+                    quality_score += 10
+                    reasons.append('Volume Spike')
+
+            # Check for strong trend
+            if len(df) >= 50:
+                sma_50 = df['close'].tail(50).mean()
+                if (trend == 'BUY' and current_close > sma_50) or (trend == 'SELL' and current_close < sma_50):
+                    quality_score += 15
+                    reasons.append('Trend Alignment')
+
+            # Check for good R:R
+            if rr >= 2.0:
+                quality_score += 10
+                reasons.append('High R:R Ratio')
+
+            # Only return if quality score is decent
+            if quality_score < 65:
+                return None
+
+            if not reasons:
+                reasons = ['Price Action', 'Technical Setup']
+
+            return {
+                'symbol': symbol,
+                'direction': trend,
+                'timeframe': timeframe,
+                'entry': float(entry),
+                'stop_loss': float(stop_loss),
+                'take_profit': float(take_profit),
+                'risk_reward': float(rr),
+                'quality_score': quality_score,
+                'confluence_reasons': reasons
+            }
+
+        except Exception as e:
+            print(f"[Opportunity Scanner] Error analyzing {symbol}: {e}")
+            return None
 
     def update_display(self):
         """Update the opportunities grid display"""

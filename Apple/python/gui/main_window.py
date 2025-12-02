@@ -323,8 +323,22 @@ class MainWindow(QMainWindow):
         if 'timeframe' in data:
             self.current_timeframe = data['timeframe']
 
-        # TODO: Feed real data to widgets here
-        # For now just update status
+        # Feed real data to Order Flow widget
+        if hasattr(self, 'orderflow_widget'):
+            # Get candle data for analysis
+            df = self.mt5_connector.get_candles(self.current_symbol, self.current_timeframe, 200)
+            if df is not None and len(df) > 50:
+                # Scan for institutional orders using real data
+                self.orderflow_widget.scan_and_update(self.current_symbol, df, lookback=50)
+                print(f"[MT5] Fed {len(df)} candles to Order Flow widget for {self.current_symbol}")
+
+        # Feed real data to Opportunity Scanner
+        if hasattr(self, 'scanner_widget'):
+            # Notify scanner that real data is available
+            self.scanner_widget.set_mt5_connector(self.mt5_connector)
+            print(f"[MT5] Opportunity Scanner now using REAL market data")
+
+        # Update status
         self.status_label.setText(f"MT5 data received: {self.current_symbol} {self.current_timeframe}")
 
     def on_mt5_error(self, error_message: str):
