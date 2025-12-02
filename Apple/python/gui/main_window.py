@@ -146,6 +146,13 @@ class MainWindow(QMainWindow):
         self.controls_panel = ControlsPanel()
         layout.addWidget(self.controls_panel, 1)  # 25% height
 
+        # Connect controls panel signals
+        self.controls_panel.order_requested.connect(self.on_order_requested)
+        self.controls_panel.setting_changed.connect(self.on_setting_changed)
+
+        # Connect chart panel signals
+        self.chart_panel.timeframe_changed.connect(self.on_timeframe_changed)
+
         return widget
 
     def create_center_panel(self) -> QWidget:
@@ -323,6 +330,14 @@ class MainWindow(QMainWindow):
         if 'timeframe' in data:
             self.current_timeframe = data['timeframe']
 
+        # Feed real data to Chart Panel
+        if hasattr(self, 'chart_panel'):
+            # Update chart's symbol if changed
+            if self.chart_panel.current_symbol != self.current_symbol:
+                self.chart_panel.current_symbol = self.current_symbol
+                self.chart_panel.load_initial_data()  # Reload chart data
+            # Chart auto-updates via its own timer using data_manager
+
         # Feed real data to Order Flow widget
         if hasattr(self, 'orderflow_widget'):
             # Get candle data for analysis
@@ -345,6 +360,36 @@ class MainWindow(QMainWindow):
         """Handle MT5 error"""
         self.status_label.setText(f"MT5 Error: {error_message}")
         print(f"[MT5 ERROR] {error_message}")
+
+    def on_order_requested(self, order_type: str):
+        """Handle quick order button click from controls panel"""
+        print(f"[Main Window] {order_type} order requested")
+        self.status_label.setText(f"{order_type} order requested - sending to MT5...")
+
+        # Send order command to MT5 via command manager
+        from core.command_manager import command_manager
+        success = command_manager.send_market_order(
+            order_type=order_type,
+            symbol=self.current_symbol,
+            volume=0.01  # Default volume, can be made configurable
+        )
+
+        if success:
+            self.status_label.setText(f"✓ {order_type} order sent successfully")
+        else:
+            self.status_label.setText(f"✗ Failed to send {order_type} order")
+
+    def on_setting_changed(self, setting_name: str, value):
+        """Handle setting change from controls panel"""
+        print(f"[Main Window] Setting changed: {setting_name} = {value}")
+        self.status_label.setText(f"Setting updated: {setting_name}")
+
+        # Update widgets based on setting changes
+        # For example, if filters change, we could refresh the opportunity scanner
+        if setting_name in ['use_fvg_filter', 'use_ob_filter', 'use_liquidity_filter']:
+            if hasattr(self, 'scanner_widget'):
+                # Trigger a rescan with new filters
+                self.scanner_widget.scan_market()
 
     def on_export(self):
         """Handle export action"""
