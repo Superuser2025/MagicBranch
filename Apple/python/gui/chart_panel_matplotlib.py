@@ -889,27 +889,32 @@ class ChartPanel(QWidget):
         )
 
     def update_chart(self):
-        """Update chart with latest price (only updates last candle, no reload)"""
+        """Update chart with latest price or full reload based on refresh rate"""
 
         try:
             # Skip update if we're currently loading new data (symbol/timeframe change)
             if self.is_loading:
                 return
 
-            # Update only the last candle with current price
-            # DO NOT reload all 100 candles - that causes the "morphing" issue!
-            self.update_last_candle_only()
+            # Check refresh interval - if >= 2s, do full reload to show new candles
+            interval = self.update_timer.interval()
+            if interval >= 2000:  # 2+ seconds - reload all data
+                print(f"[Chart] Full reload (interval={interval}ms)")
+                self.load_initial_data()
+            else:
+                # Fast refresh - just update last candle
+                self.update_last_candle_only()
 
-            if self.candle_data:
-                self.plot_candlesticks()
-                self.status_label.setText(f"Updated: {datetime.now().strftime('%H:%M:%S')}")
-                self.status_label.setStyleSheet(f"""
-                    QLabel {{
-                        color: {settings.theme.success};
-                        font-size: {settings.theme.font_size_sm}px;
-                        background: transparent;
-                    }}
-                """)
+                if self.candle_data:
+                    self.plot_candlesticks()
+                    self.status_label.setText(f"Updated: {datetime.now().strftime('%H:%M:%S')}")
+                    self.status_label.setStyleSheet(f"""
+                        QLabel {{
+                            color: {settings.theme.success};
+                            font-size: {settings.theme.font_size_sm}px;
+                            background: transparent;
+                        }}
+                    """)
 
         except Exception as e:
             self.status_label.setText("Update Error")
