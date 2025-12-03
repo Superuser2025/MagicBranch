@@ -73,6 +73,8 @@ class MainWindow(QMainWindow):
         # === OPPORTUNITY SCANNER (fills top space on big screens) ===
         self.scanner_widget = OpportunityScannerWidget()
         self.scanner_widget.setMaximumHeight(220)  # Fixed height for scanner
+        # Give scanner access to MT5 connector immediately
+        self.scanner_widget.set_mt5_connector(self.mt5_connector)
         main_layout.addWidget(self.scanner_widget)
 
         # === MAIN CONTENT (3 COLUMNS) ===
