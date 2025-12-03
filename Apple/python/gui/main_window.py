@@ -25,6 +25,7 @@ from widgets.equity_curve_widget import EquityCurveWidget
 from widgets.trade_journal_widget import TradeJournalWidget
 from gui.chart_panel_matplotlib import ChartPanel
 from gui.controls_panel import ControlsPanel
+from gui.symbol_manager_dialog import SymbolManagerDialog
 from core.mt5_connector import MT5Connector
 
 
@@ -283,6 +284,12 @@ class MainWindow(QMainWindow):
         refresh_action.triggered.connect(self.update_all_data)
         view_menu.addAction(refresh_action)
 
+        view_menu.addSeparator()
+
+        manage_symbols_action = QAction("Manage Symbols...", self)
+        manage_symbols_action.triggered.connect(self.on_manage_symbols)
+        view_menu.addAction(manage_symbols_action)
+
         # Help Menu
         help_menu = menubar.addMenu("&Help")
 
@@ -468,6 +475,22 @@ class MainWindow(QMainWindow):
             "✓ Automated Trade Journal\n\n"
             "© 2025 AppleTrader Pro"
         )
+
+    def on_manage_symbols(self):
+        """Show symbol manager dialog"""
+        dialog = SymbolManagerDialog(self)
+        dialog.symbols_changed.connect(self.on_symbols_updated)
+        dialog.exec()
+
+    def on_symbols_updated(self, symbols: list):
+        """Handle symbol list update from symbol manager"""
+        self.status_label.setText(f"Symbol list updated: {len(symbols)} symbols")
+        print(f"[Main Window] Symbol list updated: {symbols}")
+        # Update all widgets that use symbols
+        if hasattr(self, 'scanner_widget'):
+            self.scanner_widget.pairs_to_scan = symbols
+            self.scanner_widget.scan_market()
+        # Future: Update other widgets as needed
 
     def apply_dark_theme(self):
         """Apply dark theme to main window"""
