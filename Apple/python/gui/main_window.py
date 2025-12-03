@@ -72,7 +72,8 @@ class MainWindow(QMainWindow):
 
         # === OPPORTUNITY SCANNER (fills top space on big screens) ===
         self.scanner_widget = OpportunityScannerWidget()
-        self.scanner_widget.setMaximumHeight(220)  # Fixed height for scanner
+        self.scanner_widget.setMinimumHeight(260)  # Ensure full card visibility
+        self.scanner_widget.setMaximumHeight(280)  # Increased from 220 for better visibility
         # Give scanner access to MT5 connector immediately
         self.scanner_widget.set_mt5_connector(self.mt5_connector)
         main_layout.addWidget(self.scanner_widget)
@@ -356,6 +357,22 @@ class MainWindow(QMainWindow):
             # Notify scanner that real data is available
             self.scanner_widget.set_mt5_connector(self.mt5_connector)
             print(f"[MT5] Opportunity Scanner now using REAL market data")
+
+        # Feed real data to Momentum Widget
+        if hasattr(self, 'momentum_widget'):
+            # Get all symbols data from MT5 for momentum scanning
+            market_data = self.mt5_connector.get_all_symbols_data()
+            if market_data and len(market_data) > 0:
+                self.momentum_widget.scan_and_update(market_data)
+                print(f"[MT5] Fed {len(market_data)} symbols to Momentum Widget")
+
+        # Feed real data to Correlation Widget
+        if hasattr(self, 'correlation_widget'):
+            # Get all symbols data for correlation analysis
+            market_data = self.mt5_connector.get_all_symbols_data()
+            if market_data and len(market_data) > 0:
+                self.correlation_widget.update_data(market_data)
+                print(f"[MT5] Fed {len(market_data)} symbols to Correlation Widget")
 
         # Update status
         self.status_label.setText(f"MT5 data received: {self.current_symbol} {self.current_timeframe}")

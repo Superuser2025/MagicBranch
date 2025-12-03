@@ -319,6 +319,18 @@ class NewsImpactWidget(QWidget):
         # Create sample news events using correct constructor
         sample_events = []
 
+        # Event 0: IMMINENT - US Retail Sales (in 10 minutes)
+        event0 = NewsEvent(
+            event_name='US Retail Sales',
+            currency='USD',
+            timestamp=datetime.now() + timedelta(minutes=10),
+            forecast=0.5,
+            previous=0.3
+        )
+        event0.avg_pip_impact = 85
+        event0.impact_level = ImpactLevel.HIGH
+        sample_events.append(event0)
+
         # Event 1: US Non-Farm Payrolls
         event1 = NewsEvent(
             event_name='US Non-Farm Payrolls',

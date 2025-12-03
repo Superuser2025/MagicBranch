@@ -133,8 +133,8 @@ class SessionMomentumWidget(QWidget):
         self.refresh_timer.timeout.connect(self.on_refresh_requested)
         self.refresh_timer.start(3000)
 
-        # Load sample data to show functionality
-        self.load_sample_data()
+        # Don't load sample data - wait for real MT5 data
+        # Real data will be fed by main window via scan_and_update()
 
     def init_ui(self):
         """Initialize the user interface"""
