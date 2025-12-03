@@ -899,7 +899,14 @@ class ChartPanel(QWidget):
             # ALWAYS reload data to get new candles from MT5
             # This is needed so the chart actually updates with market movement
             print(f"[Chart] Reloading data at {datetime.now().strftime('%H:%M:%S')}")
-            self.load_historical_data()  # CORRECT METHOD NAME
+            success = self.load_historical_data()  # CORRECT METHOD NAME
+
+            # CRITICAL: Redraw the chart with new data!
+            if success:
+                self.plot_candlesticks()
+                print(f"[Chart] ✓ Chart redrawn with {len(self.candle_data)} candles")
+            else:
+                print(f"[Chart] ✗ Failed to load data from MT5")
 
         except Exception as e:
             print(f"[Chart] Error updating: {e}")

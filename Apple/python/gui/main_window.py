@@ -335,7 +335,9 @@ class MainWindow(QMainWindow):
             # Update chart's symbol if changed
             if self.chart_panel.current_symbol != self.current_symbol:
                 self.chart_panel.current_symbol = self.current_symbol
-                self.chart_panel.load_historical_data()  # Reload chart data with CORRECT method
+                success = self.chart_panel.load_historical_data()  # Reload chart data with CORRECT method
+                if success and hasattr(self.chart_panel, 'plot_candlesticks'):
+                    self.chart_panel.plot_candlesticks()  # CRITICAL: Redraw the chart!
             # Chart auto-updates via its own timer using data_manager
 
         # Feed real data to Order Flow widget
@@ -408,7 +410,9 @@ class MainWindow(QMainWindow):
 
                 # Force immediate chart reload to show it's working
                 if hasattr(self.chart_panel, 'load_historical_data'):
-                    self.chart_panel.load_historical_data()
+                    success = self.chart_panel.load_historical_data()
+                    if success and hasattr(self.chart_panel, 'plot_candlesticks'):
+                        self.chart_panel.plot_candlesticks()  # CRITICAL: Redraw the chart!
                     print(f"[Main Window] Chart reloaded immediately")
 
             # Update main window timer
