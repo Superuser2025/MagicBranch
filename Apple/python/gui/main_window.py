@@ -335,7 +335,7 @@ class MainWindow(QMainWindow):
             # Update chart's symbol if changed
             if self.chart_panel.current_symbol != self.current_symbol:
                 self.chart_panel.current_symbol = self.current_symbol
-                self.chart_panel.load_initial_data()  # Reload chart data
+                self.chart_panel.load_historical_data()  # Reload chart data with CORRECT method
             # Chart auto-updates via its own timer using data_manager
 
         # Feed real data to Order Flow widget
@@ -407,8 +407,8 @@ class MainWindow(QMainWindow):
                 self.status_label.setText(f"Chart refresh: {interval/1000}s")
 
                 # Force immediate chart reload to show it's working
-                if hasattr(self.chart_panel, 'load_initial_data'):
-                    self.chart_panel.load_initial_data()
+                if hasattr(self.chart_panel, 'load_historical_data'):
+                    self.chart_panel.load_historical_data()
                     print(f"[Main Window] Chart reloaded immediately")
 
             # Update main window timer

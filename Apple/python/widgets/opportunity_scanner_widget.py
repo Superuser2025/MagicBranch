@@ -271,14 +271,14 @@ class OpportunityScannerWidget(QWidget):
         print(f"[DEBUG] scan_market() called at {datetime.now().strftime('%H:%M:%S')}")
         self.blink_status()
 
-        # Use real data if MT5 is connected, otherwise use demo data
+        # ONLY use real MT5 data - NO DEMO DATA
         if self.using_real_data and self.mt5_connector:
             self.opportunities = self.scan_real_market_data()
-            print(f"[DEBUG] Scanned REAL data: {len(self.opportunities)} opportunities found")
+            print(f"[Opportunity Scanner] Scanned REAL MT5 data: {len(self.opportunities)} opportunities found")
         else:
-            # Generate demo opportunities
-            self.opportunities = self.generate_opportunities()
-            print(f"[DEBUG] Generated {len(self.opportunities)} DEMO opportunities")
+            # NO DEMO DATA - wait for MT5 connection
+            self.opportunities = []
+            print(f"[Opportunity Scanner] Waiting for MT5 connection - no demo data used")
 
         # Sort by quality score (highest first)
         self.opportunities.sort(key=lambda x: x['quality_score'], reverse=True)
